@@ -22,12 +22,6 @@ enum MembershipStatus {
   INACTIVE
 }
 
-enum InvitationRole {
-  DIRECTOR
-  COACH
-  PARENT
-}
-
 enum InvitationStatus {
   PENDING
   ACCEPTED
@@ -102,7 +96,7 @@ model Invitation {
   id        Int              @id @default(autoincrement())
   email     String
   academyId Int
-  role      InvitationRole
+  role      Role
   token     String           @unique
   status    InvitationStatus @default(PENDING)
   expiresAt DateTime
