@@ -6,9 +6,188 @@ datasource db {
   provider = "postgresql"
 }
 
-//////////////////////////////////////////////////////
-// ENUMS
-//////////////////////////////////////////////////////
+model User {
+  id               Int              @id @default(autoincrement())
+  email            String           @unique
+  passwordHash     String
+  name             String
+  createdAt        DateTime         @default(now())
+  role             Role             @default(PARENT)
+  evaluationsGiven Evaluation[]
+  memberships      Membership[]
+  guardians        PlayerGuardian[]
+  teamCoaches      TeamCoach[]
+
+  @@map("users")
+}
+
+model Academy {
+  id                  Int                @id @default(autoincrement())
+  name                String
+  country             String
+  city                String
+  status              String
+  createdBySuperAdmin Boolean            @default(true)
+  createdAt           DateTime           @default(now())
+  evaluations         Evaluation[]
+  invitations         Invitation[]
+  memberships         Membership[]
+  players             Player[]
+  teams               Team[]
+  trainingSchedules   TrainingSchedule[]
+  trainingSessions    TrainingSession[]
+
+  @@map("academies")
+}
+
+model Membership {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  academyId Int
+  role      Role[]
+  status    MembershipStatus @default(ACTIVE)
+  createdAt DateTime         @default(now())
+  academy   Academy          @relation(fields: [academyId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
+
+  @@unique([userId, academyId])
+  @@map("memberships")
+}
+
+model Invitation {
+  id        Int              @id @default(autoincrement())
+  email     String
+  academyId Int
+  token     String           @unique
+  status    InvitationStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime         @default(now())
+  role      Role
+  academy   Academy          @relation(fields: [academyId], references: [id])
+
+  @@map("invitations")
+}
+
+model Team {
+  id        Int                @id @default(autoincrement())
+  academyId Int
+  name      String
+  category  String
+  players   Player[]
+  coaches   TeamCoach[]
+  academy   Academy            @relation(fields: [academyId], references: [id])
+  schedules TrainingSchedule[]
+  sessions  TrainingSession[]
+
+  @@map("teams")
+}
+
+model TeamCoach {
+  id        Int           @id @default(autoincrement())
+  teamId    Int
+  userId    Int
+  role      TeamCoachRole @default(ASSISTANT)
+  createdAt DateTime      @default(now())
+  team      Team          @relation(fields: [teamId], references: [id])
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@map("team_coaches")
+}
+
+model Player {
+  id          Int              @id @default(autoincrement())
+  academyId   Int
+  teamId      Int
+  name        String
+  birthdate   DateTime
+  position    String?
+  createdAt   DateTime         @default(now())
+  attendance  Attendance[]
+  evaluations Evaluation[]
+  guardians   PlayerGuardian[]
+  academy     Academy          @relation(fields: [academyId], references: [id])
+  team        Team             @relation(fields: [teamId], references: [id])
+
+  @@map("players")
+}
+
+model PlayerGuardian {
+  id           Int     @id @default(autoincrement())
+  playerId     Int
+  userId       Int
+  relationship String?
+  player       Player  @relation(fields: [playerId], references: [id])
+  user         User    @relation(fields: [userId], references: [id])
+
+  @@unique([playerId, userId])
+  @@map("player_guardians")
+}
+
+model TrainingSchedule {
+  id         Int               @id @default(autoincrement())
+  academyId  Int
+  teamId     Int
+  daysOfWeek String
+  time       String
+  startDate  DateTime
+  endDate    DateTime
+  location   String?
+  createdAt  DateTime          @default(now())
+  academy    Academy           @relation(fields: [academyId], references: [id])
+  team       Team              @relation(fields: [teamId], references: [id])
+  sessions   TrainingSession[]
+
+  @@map("training_schedules")
+}
+
+model TrainingSession {
+  id           Int                   @id @default(autoincrement())
+  academyId    Int
+  teamId       Int
+  scheduleId   Int?
+  date         DateTime
+  status       TrainingSessionStatus @default(SCHEDULED)
+  cancelReason String?
+  createdAt    DateTime              @default(now())
+  attendance   Attendance[]
+  academy      Academy               @relation(fields: [academyId], references: [id])
+  schedule     TrainingSchedule?     @relation(fields: [scheduleId], references: [id])
+  team         Team                  @relation(fields: [teamId], references: [id])
+
+  @@map("training_sessions")
+}
+
+model Attendance {
+  id         Int              @id @default(autoincrement())
+  academyId  Int
+  playerId   Int
+  trainingId Int
+  status     AttendanceStatus
+  player     Player           @relation(fields: [playerId], references: [id])
+  training   TrainingSession  @relation(fields: [trainingId], references: [id])
+
+  @@unique([playerId, trainingId])
+  @@map("attendance")
+}
+
+model Evaluation {
+  id             Int      @id @default(autoincrement())
+  academyId      Int
+  playerId       Int
+  coachId        Int
+  technicalScore Int
+  tacticalScore  Int
+  physicalScore  Int
+  attitudeScore  Int
+  notes          String?
+  date           DateTime @default(now())
+  academy        Academy  @relation(fields: [academyId], references: [id])
+  coach          User     @relation(fields: [coachId], references: [id])
+  player         Player   @relation(fields: [playerId], references: [id])
+
+  @@map("evaluations")
+}
 
 enum Role {
   SUPER_ADMIN
@@ -33,209 +212,12 @@ enum AttendanceStatus {
   ABSENT
 }
 
+enum TeamCoachRole {
+  HEAD
+  ASSISTANT
+}
+
 enum TrainingSessionStatus {
   SCHEDULED
   CANCELLED
-}
-
-//////////////////////////////////////////////////////
-// CORE
-//////////////////////////////////////////////////////
-
-model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         Role     @default(PARENT)
-  createdAt    DateTime @default(now())
-
-  memberships      Membership[]
-  guardians        PlayerGuardian[]
-  coachedTeams     Team[]
-  evaluationsGiven Evaluation[]
-
-  @@map("users")
-}
-
-model Academy {
-  id                  Int      @id @default(autoincrement())
-  name                String
-  country             String
-  city                String
-  status              String
-  createdBySuperAdmin Boolean  @default(true)
-  createdAt           DateTime @default(now())
-
-  memberships       Membership[]
-  teams             Team[]
-  players           Player[]
-  trainingSchedules TrainingSchedule[]
-  trainingSessions  TrainingSession[]
-  evaluations       Evaluation[]
-  invitations       Invitation[]
-
-  @@map("academies")
-}
-
-model Membership {
-  id        Int              @id @default(autoincrement())
-  userId    Int
-  academyId Int
-  role      Role
-  status    MembershipStatus @default(ACTIVE)
-  createdAt DateTime         @default(now())
-
-  user    User    @relation(fields: [userId], references: [id])
-  academy Academy @relation(fields: [academyId], references: [id])
-
-  @@unique([userId, academyId])
-  @@map("memberships")
-}
-
-model Invitation {
-  id        Int              @id @default(autoincrement())
-  email     String
-  academyId Int
-  role      Role
-  token     String           @unique
-  status    InvitationStatus @default(PENDING)
-  expiresAt DateTime
-  createdAt DateTime         @default(now())
-
-  academy Academy @relation(fields: [academyId], references: [id])
-
-  @@map("invitations")
-}
-
-//////////////////////////////////////////////////////
-// ORGANIZATION
-//////////////////////////////////////////////////////
-
-model Team {
-  id        Int    @id @default(autoincrement())
-  academyId Int
-  name      String
-  category  String
-  coachId   Int?
-
-  academy Academy @relation(fields: [academyId], references: [id])
-  coach   User?   @relation(fields: [coachId], references: [id])
-
-  players   Player[]
-  schedules TrainingSchedule[]
-  sessions  TrainingSession[]
-
-  @@map("teams")
-}
-
-model Player {
-  id        Int      @id @default(autoincrement())
-  academyId Int
-  teamId    Int
-  name      String
-  birthdate DateTime
-  position  String?
-  createdAt DateTime @default(now())
-
-  academy Academy @relation(fields: [academyId], references: [id])
-  team    Team    @relation(fields: [teamId], references: [id])
-
-  guardians   PlayerGuardian[]
-  attendance  Attendance[]
-  evaluations Evaluation[]
-
-  @@map("players")
-}
-
-model PlayerGuardian {
-  id           Int     @id @default(autoincrement())
-  playerId     Int
-  userId       Int
-  relationship String?
-
-  player Player @relation(fields: [playerId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@unique([playerId, userId])
-  @@map("player_guardians")
-}
-
-//////////////////////////////////////////////////////
-// TRAINING
-//////////////////////////////////////////////////////
-
-model TrainingSchedule {
-  id         Int      @id @default(autoincrement())
-  academyId  Int
-  teamId     Int
-  daysOfWeek String // e.g. "MON,WED,FRI"
-  time       String // e.g. "19:30"
-  startDate  DateTime
-  endDate    DateTime
-  location   String?
-  createdAt  DateTime @default(now())
-
-  academy Academy @relation(fields: [academyId], references: [id])
-  team    Team    @relation(fields: [teamId], references: [id])
-
-  sessions TrainingSession[]
-
-  @@map("training_schedules")
-}
-
-model TrainingSession {
-  id           Int                   @id @default(autoincrement())
-  academyId    Int
-  teamId       Int
-  scheduleId   Int?
-  date         DateTime
-  status       TrainingSessionStatus @default(SCHEDULED)
-  cancelReason String?
-  createdAt    DateTime              @default(now())
-
-  academy  Academy           @relation(fields: [academyId], references: [id])
-  team     Team              @relation(fields: [teamId], references: [id])
-  schedule TrainingSchedule? @relation(fields: [scheduleId], references: [id])
-
-  attendance Attendance[]
-
-  @@map("training_sessions")
-}
-
-model Attendance {
-  id         Int              @id @default(autoincrement())
-  academyId  Int
-  playerId   Int
-  trainingId Int
-  status     AttendanceStatus
-
-  player   Player          @relation(fields: [playerId], references: [id])
-  training TrainingSession @relation(fields: [trainingId], references: [id])
-
-  @@unique([playerId, trainingId])
-  @@map("attendance")
-}
-
-//////////////////////////////////////////////////////
-// PLAYER DEVELOPMENT
-//////////////////////////////////////////////////////
-
-model Evaluation {
-  id             Int      @id @default(autoincrement())
-  academyId      Int
-  playerId       Int
-  coachId        Int
-  technicalScore Int
-  tacticalScore  Int
-  physicalScore  Int
-  attitudeScore  Int
-  notes          String?
-  date           DateTime @default(now())
-
-  academy Academy @relation(fields: [academyId], references: [id])
-  player  Player  @relation(fields: [playerId], references: [id])
-  coach   User    @relation(fields: [coachId], references: [id])
-
-  @@map("evaluations")
 }
