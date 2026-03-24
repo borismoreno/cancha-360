@@ -8,7 +8,10 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.setGlobalPrefix('api');
   app.enableCors({
-    origin: ['http://localhost:5173'],
+    origin: [
+      'http://localhost:5173',
+      'https://main.d256ipm8ofslkv.amplifyapp.com',
+    ],
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 3000);
