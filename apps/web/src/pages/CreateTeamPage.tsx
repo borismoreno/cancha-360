@@ -1,28 +1,28 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Layout from '../components/Layout';
-import { teamsApi } from '../api/teams.api';
-import { useAuth } from '../hooks/useAuth';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Layout from "../components/Layout";
+import { teamsApi } from "../api/teams.api";
+import { useAuth } from "../hooks/useAuth";
 
 export default function CreateTeamPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [form, setForm] = useState({ name: '', category: '' });
-  const [academyId, setAcademyId] = useState(user?.academyId?.toString() ?? '');
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({ name: "", category: "" });
+  const [academyId, setAcademyId] = useState(user?.academyId?.toString() ?? "");
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
       await teamsApi.create(Number(academyId), form);
       setSuccess(true);
-      setTimeout(() => navigate('/dashboard'), 1500);
+      setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Error al crear equipo');
+      setError(err?.response?.data?.message ?? "Error al crear equipo");
     } finally {
       setLoading(false);
     }
@@ -48,7 +48,7 @@ export default function CreateTeamPage() {
           onSubmit={handleSubmit}
           className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
         >
-          {user?.role === 'SUPER_ADMIN' && (
+          {user?.role?.includes("SUPER_ADMIN") && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 ID de Academia
@@ -78,7 +78,9 @@ export default function CreateTeamPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Categoría
+            </label>
             <input
               type="text"
               required
@@ -95,11 +97,11 @@ export default function CreateTeamPage() {
               disabled={loading}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Creando...' : 'Crear Equipo'}
+              {loading ? "Creando..." : "Crear Equipo"}
             </button>
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-5 rounded-md text-sm transition-colors"
             >
               Cancelar
