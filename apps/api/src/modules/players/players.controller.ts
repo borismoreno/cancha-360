@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Param,
   Body,
@@ -17,6 +18,15 @@ import { CurrentUser } from '../auth/current-user.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PlayersController {
   constructor(private readonly playersService: PlayersService) {}
+
+  @Get()
+  @Roles('DIRECTOR', 'COACH', 'PARENT')
+  list(
+    @Param('teamId', ParseIntPipe) teamId: number,
+    @CurrentUser() currentUser: { id: number; role: string; academyId: number },
+  ) {
+    return this.playersService.listPlayers(teamId, currentUser);
+  }
 
   @Post()
   @Roles('DIRECTOR', 'COACH')

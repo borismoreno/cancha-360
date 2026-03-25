@@ -6,11 +6,15 @@ import SelectAcademyPage from '../pages/SelectAcademyPage';
 import AcceptInvitationPage from '../pages/AcceptInvitationPage';
 import DashboardPage from '../pages/DashboardPage';
 import CreateAcademyPage from '../pages/CreateAcademyPage';
+import TeamsPage from '../pages/TeamsPage';
+import TeamDetailPage from '../pages/TeamDetailPage';
 import CreateTeamPage from '../pages/CreateTeamPage';
+import PlayersListPage from '../pages/PlayersListPage';
 import CreatePlayerPage from '../pages/CreatePlayerPage';
 import PlayerProgressPage from '../pages/PlayerProgressPage';
 import CreateEvaluationPage from '../pages/CreateEvaluationPage';
 import CreateTrainingSchedulePage from '../pages/CreateTrainingSchedulePage';
+import SessionsListPage from '../pages/SessionsListPage';
 import TrainingSessionPage from '../pages/TrainingSessionPage';
 import TeamCoachesPage from '../pages/TeamCoachesPage';
 import InvitePage from '../pages/InvitePage';
@@ -42,12 +46,38 @@ export default function AppRouter() {
           }
         />
 
-        {/* Protected — DIRECTOR or COACH */}
+        {/* Teams browsing — DIRECTOR, COACH, SUPER_ADMIN */}
+        <Route
+          path="/teams"
+          element={
+            <ProtectedRoute roles={['SUPER_ADMIN', 'DIRECTOR', 'COACH']}>
+              <TeamsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teams/:teamId"
+          element={
+            <ProtectedRoute roles={['SUPER_ADMIN', 'DIRECTOR', 'COACH']}>
+              <TeamDetailPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/teams/new"
           element={
             <ProtectedRoute roles={['SUPER_ADMIN', 'DIRECTOR', 'COACH']}>
               <CreateTeamPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Players */}
+        <Route
+          path="/teams/:teamId/players"
+          element={
+            <ProtectedRoute roles={['DIRECTOR', 'COACH', 'PARENT']}>
+              <PlayersListPage />
             </ProtectedRoute>
           }
         />
@@ -59,6 +89,8 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        {/* Coaches */}
         <Route
           path="/teams/:teamId/coaches"
           element={
@@ -67,11 +99,21 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        {/* Training */}
         <Route
           path="/teams/:teamId/training-schedules/new"
           element={
             <ProtectedRoute roles={['DIRECTOR', 'COACH']}>
               <CreateTrainingSchedulePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teams/:teamId/sessions"
+          element={
+            <ProtectedRoute roles={['DIRECTOR', 'COACH']}>
+              <SessionsListPage />
             </ProtectedRoute>
           }
         />
@@ -83,6 +125,8 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        {/* Evaluations */}
         <Route
           path="/players/:playerId/evaluations/new"
           element={

@@ -11,6 +11,11 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Dashboard", to: "/dashboard" },
   {
+    label: "Mis Equipos",
+    to: "/teams",
+    roles: ["SUPER_ADMIN", "DIRECTOR", "COACH"],
+  },
+  {
     label: "Crear Academia",
     to: "/admin/academies/new",
     roles: ["SUPER_ADMIN"],

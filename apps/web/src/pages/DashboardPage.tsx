@@ -30,17 +30,6 @@ const actions: ActionCard[] = [
   },
 ];
 
-const teamActions = [
-  { label: "Agregar Jugador", path: "/teams/:teamId/players/new" },
-  {
-    label: "Horario de Entrenamiento",
-    path: "/teams/:teamId/training-schedules/new",
-  },
-  { label: "Entrenadores del Equipo", path: "/teams/:teamId/coaches" },
-  { label: "Sesión de Entrenamiento", path: "/training-sessions/:sessionId" },
-  { label: "Evaluar Jugador", path: "/players/:playerId/evaluations/new" },
-  { label: "Progreso del Jugador", path: "/players/:playerId/progress" },
-];
 
 export default function DashboardPage() {
   const { user, isDirector, isCoach } = useAuth();
@@ -94,17 +83,17 @@ export default function DashboardPage() {
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Operaciones por equipo / jugador
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {teamActions.map((a) => (
-              <div
-                key={a.path}
-                className="bg-white border border-gray-200 rounded-lg p-4"
-              >
-                <p className="font-medium text-gray-700 text-sm">{a.label}</p>
-                <p className="text-xs text-gray-400 font-mono mt-1 break-all">{a.path}</p>
-              </div>
-            ))}
-          </div>
+          <button
+            onClick={() => navigate('/teams')}
+            className="w-full sm:w-auto text-left bg-white border border-gray-200 rounded-xl p-5 hover:border-indigo-400 hover:shadow-sm transition-all group"
+          >
+            <h3 className="font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors">
+              Ver mis equipos
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Accede a jugadores, sesiones, entrenadores y evaluaciones desde cada equipo.
+            </p>
+          </button>
         </div>
       )}
 

@@ -6,6 +6,15 @@ export interface CreatePlayerRequest {
   parentEmail?: string;
 }
 
+export interface Player {
+  id: number;
+  name: string;
+  position?: string;
+  birthdate: string;
+  teamId: number;
+  academyId: number;
+}
+
 export interface Evaluation {
   id: number;
   technicalScore: number;

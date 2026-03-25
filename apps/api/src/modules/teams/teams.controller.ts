@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Param,
   Body,
@@ -17,6 +18,15 @@ import { CurrentUser } from '../auth/current-user.decorator';
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TeamsController {
   constructor(private readonly teamsService: TeamsService) {}
+
+  @Get()
+  @Roles('SUPER_ADMIN', 'DIRECTOR', 'COACH')
+  list(
+    @Param('academyId', ParseIntPipe) academyId: number,
+    @CurrentUser() currentUser: { id: number; role: string; academyId: number },
+  ) {
+    return this.teamsService.listTeams(academyId, currentUser);
+  }
 
   @Post()
   @Roles('DIRECTOR', 'COACH')

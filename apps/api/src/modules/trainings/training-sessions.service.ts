@@ -9,6 +9,28 @@ import { MESSAGES } from '../../common/messages';
 @Injectable()
 export class TrainingSessionsService {
 
+  async listSessions(
+    teamId: number,
+    currentUser: { id: number; role: string; academyId?: number },
+  ) {
+    const isSuperAdmin = currentUser.role === 'SUPER_ADMIN';
+
+    const team = await prisma.team.findFirst({
+      where: isSuperAdmin
+        ? { id: teamId }
+        : { id: teamId, academyId: currentUser.academyId },
+    });
+
+    if (!team) {
+      throw new NotFoundException(MESSAGES.TEAM.NOT_FOUND(teamId));
+    }
+
+    return prisma.trainingSession.findMany({
+      where: { teamId },
+      orderBy: { date: 'asc' },
+    });
+  }
+
   async cancelSession(
     sessionId: number,
     dto: CancelSessionDto,

@@ -14,3 +14,12 @@ export interface AttendanceRequest {
 export interface CancelSessionRequest {
   reason?: string;
 }
+
+export interface TrainingSession {
+  id: number;
+  teamId: number;
+  academyId: number;
+  date: string;
+  status: 'SCHEDULED' | 'CANCELLED' | 'COMPLETED';
+  cancelReason?: string;
+}
