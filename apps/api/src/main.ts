@@ -11,6 +11,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:5173',
       'https://main.d256ipm8ofslkv.amplifyapp.com',
+      'https://academias.cancha360.com',
+      'https://www.academias.cancha360.com',
     ],
     credentials: true,
   });
