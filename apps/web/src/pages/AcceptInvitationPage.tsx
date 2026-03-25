@@ -27,9 +27,9 @@ export default function AcceptInvitationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Activar cuenta</h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
+      <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-6 sm:p-8">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Activar cuenta</h1>
         <p className="text-sm text-gray-500 mb-6">Completa tu registro con la invitación recibida.</p>
 
         {success && (
@@ -55,7 +55,7 @@ export default function AcceptInvitationPage() {
               type="text"
               value={token}
               readOnly
-              className="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-2 text-sm text-gray-400"
+              className="w-full border border-gray-200 bg-gray-50 rounded-md px-3 py-3 text-sm text-gray-400"
             />
           </div>
           <div>
@@ -65,8 +65,9 @@ export default function AcceptInvitationPage() {
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Tu nombre completo"
+              autoComplete="name"
             />
           </div>
           <div>
@@ -77,14 +78,15 @@ export default function AcceptInvitationPage() {
               minLength={8}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
             />
           </div>
           <button
             type="submit"
             disabled={loading || !token || success}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm disabled:opacity-50 transition-colors"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-md text-base disabled:opacity-50 transition-colors"
           >
             {loading ? 'Activando...' : 'Activar cuenta'}
           </button>

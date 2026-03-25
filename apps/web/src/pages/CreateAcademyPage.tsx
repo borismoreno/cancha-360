@@ -44,8 +44,8 @@ export default function CreateAcademyPage() {
 
   return (
     <Layout>
-      <div className="max-w-lg">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">Crear Academia</h1>
+      <div className="w-full max-w-lg">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Crear Academia</h1>
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
@@ -60,7 +60,7 @@ export default function CreateAcademyPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
+          className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 space-y-4"
         >
           {fields.map(({ label, field, type }) => (
             <div key={field}>
@@ -70,23 +70,23 @@ export default function CreateAcademyPage() {
                 required
                 value={form[field]}
                 onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           ))}
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
               {loading ? 'Creando...' : 'Crear Academia'}
             </button>
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-5 rounded-md text-sm transition-colors"
+              className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
               Cancelar
             </button>

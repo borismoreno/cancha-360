@@ -30,8 +30,8 @@ export default function CreateTeamPage() {
 
   return (
     <Layout>
-      <div className="max-w-md">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">Crear Equipo</h1>
+      <div className="w-full max-w-md">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Crear Equipo</h1>
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
@@ -46,7 +46,7 @@ export default function CreateTeamPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
+          className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 space-y-4"
         >
           {user?.role?.includes("SUPER_ADMIN") && (
             <div>
@@ -58,7 +58,7 @@ export default function CreateTeamPage() {
                 required
                 value={academyId}
                 onChange={(e) => setAcademyId(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
           )}
@@ -72,7 +72,7 @@ export default function CreateTeamPage() {
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Ej: Tigres"
             />
           </div>
@@ -86,23 +86,23 @@ export default function CreateTeamPage() {
               required
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Ej: Sub-15"
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
               {loading ? "Creando..." : "Crear Equipo"}
             </button>
             <button
               type="button"
               onClick={() => navigate("/dashboard")}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-5 rounded-md text-sm transition-colors"
+              className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
               Cancelar
             </button>

@@ -56,12 +56,12 @@ export default function TrainingSessionPage() {
 
   return (
     <Layout>
-      <div className="max-w-lg">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Sesión de Entrenamiento</h1>
+      <div className="w-full max-w-lg">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Sesión de Entrenamiento</h1>
         <p className="text-sm text-gray-500 mb-6">Sesión ID: {sessionId}</p>
 
         {/* Attendance */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
           <h2 className="font-semibold text-gray-800 mb-4">Registrar Asistencia</h2>
 
           {attendanceSuccess && (
@@ -85,7 +85,7 @@ export default function TrainingSessionPage() {
                 required
                 value={attendance.playerId}
                 onChange={(e) => setAttendance({ ...attendance, playerId: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
             <div>
@@ -96,7 +96,7 @@ export default function TrainingSessionPage() {
                     key={s}
                     type="button"
                     onClick={() => setAttendance({ ...attendance, status: s })}
-                    className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex-1 py-3 rounded-md text-sm font-medium transition-colors ${
                       attendance.status === s
                         ? s === 'PRESENT'
                           ? 'bg-green-600 text-white'
@@ -112,7 +112,7 @@ export default function TrainingSessionPage() {
             <button
               type="submit"
               disabled={attendanceLoading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
               {attendanceLoading ? 'Guardando...' : 'Registrar'}
             </button>
@@ -120,7 +120,7 @@ export default function TrainingSessionPage() {
         </div>
 
         {/* Cancel session */}
-        <div className="bg-white border border-red-200 rounded-xl p-6">
+        <div className="bg-white border border-red-200 rounded-xl p-4 sm:p-6">
           <h2 className="font-semibold text-red-700 mb-4">Cancelar Sesión</h2>
 
           {cancelSuccess && (
@@ -144,14 +144,14 @@ export default function TrainingSessionPage() {
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 disabled={cancelSuccess}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-50"
+                className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-50"
                 placeholder="Ej: Lluvia, cancha ocupada..."
               />
             </div>
             <button
               type="submit"
               disabled={cancelLoading || cancelSuccess}
-              className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
               {cancelLoading ? 'Cancelando...' : 'Cancelar Sesión'}
             </button>

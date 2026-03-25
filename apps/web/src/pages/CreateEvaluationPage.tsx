@@ -25,7 +25,7 @@ function ScoreSlider({
         max={10}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-indigo-600"
+        className="w-full accent-indigo-600 h-2"
       />
       <div className="flex justify-between text-xs text-gray-400 mt-0.5">
         <span>1</span>
@@ -78,8 +78,8 @@ export default function CreateEvaluationPage() {
 
   return (
     <Layout>
-      <div className="max-w-md">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Nueva Evaluación</h1>
+      <div className="w-full max-w-md">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Nueva Evaluación</h1>
         <p className="text-sm text-gray-500 mb-6">Jugador ID: {playerId}</p>
 
         {success && (
@@ -95,7 +95,7 @@ export default function CreateEvaluationPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-gray-200 rounded-xl p-6 space-y-5"
+          className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 space-y-5"
         >
           <ScoreSlider
             label="Puntaje Técnico"
@@ -126,23 +126,23 @@ export default function CreateEvaluationPage() {
               value={form.notes}
               onChange={(e) => setScore('notes', e.target.value)}
               rows={3}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
               placeholder="Observaciones del entrenador..."
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
               {loading ? 'Guardando...' : 'Guardar Evaluación'}
             </button>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-5 rounded-md text-sm transition-colors"
+              className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
               Cancelar
             </button>

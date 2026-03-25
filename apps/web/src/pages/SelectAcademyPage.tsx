@@ -25,9 +25,9 @@ export default function SelectAcademyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-md w-full max-w-md p-8">
-        <h1 className="text-xl font-bold text-gray-900 mb-2">Selecciona una academia</h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
+      <div className="bg-white rounded-xl shadow-md w-full max-w-md p-6 sm:p-8">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Selecciona una academia</h1>
         <p className="text-sm text-gray-500 mb-6">Tienes acceso a múltiples academias.</p>
 
         {error && (
@@ -48,7 +48,7 @@ export default function SelectAcademyPage() {
               disabled={loading}
               className="w-full text-left border border-gray-200 rounded-lg p-4 hover:border-indigo-400 hover:bg-indigo-50 transition-colors disabled:opacity-50"
             >
-              <p className="font-medium text-gray-800">{m.academyName}</p>
+              <p className="font-medium text-gray-800 text-base">{m.academyName}</p>
               <p className="text-xs text-gray-500 mt-0.5">{m.role}</p>
             </button>
           ))}

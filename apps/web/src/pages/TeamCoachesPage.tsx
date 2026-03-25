@@ -63,12 +63,12 @@ export default function TeamCoachesPage() {
 
   return (
     <Layout>
-      <div className="max-w-lg">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Entrenadores del Equipo</h1>
+      <div className="w-full max-w-lg">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Entrenadores del Equipo</h1>
         <p className="text-sm text-gray-500 mb-6">Equipo ID: {teamId}</p>
 
         {/* List */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
           <h2 className="font-semibold text-gray-800 mb-4">Entrenadores actuales</h2>
 
           {listLoading && <p className="text-sm text-gray-400">Cargando...</p>}
@@ -81,10 +81,10 @@ export default function TeamCoachesPage() {
             {coaches.map((coach) => (
               <li
                 key={coach.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3"
               >
-                <div>
-                  <p className="text-sm font-medium text-gray-800">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">
                     {coach.user?.name ?? `Usuario #${coach.userId}`}
                   </p>
                   <p className="text-xs text-gray-500">
@@ -94,7 +94,7 @@ export default function TeamCoachesPage() {
                 {isDirector && (
                   <button
                     onClick={() => handleRemove(coach.userId)}
-                    className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+                    className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors shrink-0 py-1 px-2"
                   >
                     Eliminar
                   </button>
@@ -106,7 +106,7 @@ export default function TeamCoachesPage() {
 
         {/* Add coach (DIRECTOR only) */}
         {isDirector && (
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
             <h2 className="font-semibold text-gray-800 mb-4">Agregar Entrenador</h2>
 
             {addError && (
@@ -125,7 +125,7 @@ export default function TeamCoachesPage() {
                   required
                   value={form.userId}
                   onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
@@ -135,7 +135,7 @@ export default function TeamCoachesPage() {
                   onChange={(e) =>
                     setForm({ ...form, role: e.target.value as 'HEAD' | 'ASSISTANT' })
                   }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="HEAD">Principal (HEAD)</option>
                   <option value="ASSISTANT">Asistente (ASSISTANT)</option>
@@ -144,7 +144,7 @@ export default function TeamCoachesPage() {
               <button
                 type="submit"
                 disabled={addLoading}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
               >
                 {addLoading ? 'Agregando...' : 'Agregar'}
               </button>

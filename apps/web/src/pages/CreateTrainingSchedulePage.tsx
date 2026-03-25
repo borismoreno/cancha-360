@@ -55,8 +55,8 @@ export default function CreateTrainingSchedulePage() {
 
   return (
     <Layout>
-      <div className="max-w-md">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Nuevo Horario de Entrenamiento</h1>
+      <div className="w-full max-w-md">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Nuevo Horario de Entrenamiento</h1>
         <p className="text-sm text-gray-500 mb-6">Equipo ID: {teamId}</p>
 
         {success && (
@@ -72,7 +72,7 @@ export default function CreateTrainingSchedulePage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
+          className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 space-y-4"
         >
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -84,7 +84,7 @@ export default function CreateTrainingSchedulePage() {
                   key={day.value}
                   type="button"
                   onClick={() => toggleDay(day.value)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors min-w-[44px] ${
                     selectedDays.includes(day.value)
                       ? 'bg-indigo-600 text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -103,7 +103,7 @@ export default function CreateTrainingSchedulePage() {
               required
               value={form.time}
               onChange={(e) => setForm({ ...form, time: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -116,7 +116,7 @@ export default function CreateTrainingSchedulePage() {
               required
               value={form.startDate}
               onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -129,7 +129,7 @@ export default function CreateTrainingSchedulePage() {
               required
               value={form.endDate}
               onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -141,23 +141,23 @@ export default function CreateTrainingSchedulePage() {
               type="text"
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Ej: Campo norte"
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
               {loading ? 'Creando...' : 'Crear Horario'}
             </button>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-5 rounded-md text-sm transition-colors"
+              className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
               Cancelar
             </button>

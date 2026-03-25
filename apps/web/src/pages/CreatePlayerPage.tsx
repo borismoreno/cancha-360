@@ -40,8 +40,8 @@ export default function CreatePlayerPage() {
 
   return (
     <Layout>
-      <div className="max-w-md">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Agregar Jugador</h1>
+      <div className="w-full max-w-md">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Agregar Jugador</h1>
         <p className="text-sm text-gray-500 mb-6">Equipo ID: {teamId}</p>
 
         {success && (
@@ -57,7 +57,7 @@ export default function CreatePlayerPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-gray-200 rounded-xl p-6 space-y-4"
+          className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 space-y-4"
         >
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
@@ -66,7 +66,7 @@ export default function CreatePlayerPage() {
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -79,7 +79,7 @@ export default function CreatePlayerPage() {
               required
               value={form.birthdate}
               onChange={(e) => setForm({ ...form, birthdate: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -91,7 +91,7 @@ export default function CreatePlayerPage() {
               type="text"
               value={form.position}
               onChange={(e) => setForm({ ...form, position: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="Ej: Delantero"
             />
           </div>
@@ -107,7 +107,7 @@ export default function CreatePlayerPage() {
                   type="text"
                   value={form.parentName}
                   onChange={(e) => setForm({ ...form, parentName: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div>
@@ -116,24 +116,24 @@ export default function CreatePlayerPage() {
                   type="email"
                   value={form.parentEmail}
                   onChange={(e) => setForm({ ...form, parentEmail: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
               {loading ? 'Guardando...' : 'Agregar Jugador'}
             </button>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-5 rounded-md text-sm transition-colors"
+              className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
               Cancelar
             </button>

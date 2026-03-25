@@ -32,16 +32,16 @@ export default function PlayerProgressPage() {
 
   return (
     <Layout>
-      <div className="max-w-2xl">
-        <div className="flex items-center justify-between mb-6">
+      <div className="w-full max-w-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Progreso del Jugador</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Progreso del Jugador</h1>
             <p className="text-sm text-gray-500 mt-0.5">ID: {playerId}</p>
           </div>
           {(isCoach || isDirector) && (
             <button
               onClick={() => navigate(`/players/${playerId}/evaluations/new`)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-md text-sm transition-colors"
             >
               Nueva evaluación
             </button>
@@ -57,8 +57,8 @@ export default function PlayerProgressPage() {
 
         {data && (
           <>
-            <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-              <h2 className="font-semibold text-gray-800 text-lg">{data.player.name}</h2>
+            <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
+              <h2 className="font-semibold text-gray-800 text-lg md:text-xl">{data.player.name}</h2>
               {data.player.position && (
                 <p className="text-sm text-gray-500 mt-0.5">Posición: {data.player.position}</p>
               )}
@@ -86,26 +86,26 @@ export default function PlayerProgressPage() {
             <div className="space-y-3">
               {data.evaluations?.map((ev) => (
                 <div key={ev.id} className="bg-white border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="grid grid-cols-4 gap-4 text-sm flex-1">
-                      {[
-                        { label: 'Técnico', value: ev.technicalScore },
-                        { label: 'Táctico', value: ev.tacticalScore },
-                        { label: 'Físico', value: ev.physicalScore },
-                        { label: 'Actitud', value: ev.attitudeScore },
-                      ].map(({ label, value }) => (
-                        <div key={label}>
-                          <span className="text-gray-400 text-xs block">{label}</span>
-                          <span className="font-semibold text-gray-800">{value}/10</span>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="flex items-start justify-between gap-2 mb-3">
                     <span className="text-xs text-gray-400 whitespace-nowrap">
                       {new Date(ev.createdAt).toLocaleDateString('es-ES')}
                     </span>
                   </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    {[
+                      { label: 'Técnico', value: ev.technicalScore },
+                      { label: 'Táctico', value: ev.tacticalScore },
+                      { label: 'Físico', value: ev.physicalScore },
+                      { label: 'Actitud', value: ev.attitudeScore },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="bg-gray-50 rounded-md p-2">
+                        <span className="text-gray-400 text-xs block">{label}</span>
+                        <span className="font-semibold text-gray-800">{value}/10</span>
+                      </div>
+                    ))}
+                  </div>
                   {ev.notes && (
-                    <p className="mt-2 text-sm text-gray-500 italic border-t border-gray-100 pt-2">
+                    <p className="mt-3 text-sm text-gray-500 italic border-t border-gray-100 pt-2">
                       {ev.notes}
                     </p>
                   )}

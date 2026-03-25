@@ -34,9 +34,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Cancha360</h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
+      <div className="bg-white rounded-xl shadow-md w-full max-w-sm p-6 sm:p-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">Cancha360</h1>
         <p className="text-sm text-gray-500 mb-6">Inicia sesión en tu cuenta</p>
 
         {error && (
@@ -53,8 +53,9 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="correo@ejemplo.com"
+              autoComplete="email"
             />
           </div>
           <div>
@@ -64,14 +65,15 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="••••••••"
+              autoComplete="current-password"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm disabled:opacity-50 transition-colors"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-md text-base disabled:opacity-50 transition-colors"
           >
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>

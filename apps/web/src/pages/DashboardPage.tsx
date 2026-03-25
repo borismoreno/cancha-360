@@ -53,7 +53,7 @@ export default function DashboardPage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-sm text-gray-500 mt-1">
           Bienvenido. Rol:{" "}
           <span className="font-semibold text-gray-700">{user?.role}</span>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
                 className="bg-white border border-gray-200 rounded-lg p-4"
               >
                 <p className="font-medium text-gray-700 text-sm">{a.label}</p>
-                <p className="text-xs text-gray-400 font-mono mt-1">{a.path}</p>
+                <p className="text-xs text-gray-400 font-mono mt-1 break-all">{a.path}</p>
               </div>
             ))}
           </div>
