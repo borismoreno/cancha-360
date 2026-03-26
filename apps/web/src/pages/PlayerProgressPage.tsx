@@ -33,10 +33,27 @@ export default function PlayerProgressPage() {
   return (
     <Layout>
       <div className="w-full max-w-2xl">
+        {data?.player?.team && (
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => navigate(`/teams/${data.player.team!.id}/players`)}
+              className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
+            >
+              ← {data.player.team.name}
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Progreso del Jugador</h1>
-            <p className="text-sm text-gray-500 mt-0.5">ID: {playerId}</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              {data ? data.player.name : 'Progreso del Jugador'}
+            </h1>
+            {data?.player?.team && (
+              <p className="text-sm text-gray-500 mt-0.5">
+                {data.player.team.name} · {data.player.team.category}
+              </p>
+            )}
           </div>
           {(isCoach || isDirector) && (
             <button
@@ -58,13 +75,33 @@ export default function PlayerProgressPage() {
         {data && (
           <>
             <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
-              <h2 className="font-semibold text-gray-800 text-lg md:text-xl">{data.player.name}</h2>
-              {data.player.position && (
-                <p className="text-sm text-gray-500 mt-0.5">Posición: {data.player.position}</p>
-              )}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
+                <div>
+                  <h2 className="font-semibold text-gray-800 text-lg">{data.player.name}</h2>
+                  {data.player.position && (
+                    <p className="text-sm text-gray-500 mt-0.5">{data.player.position}</p>
+                  )}
+                </div>
+                {data.attendanceSummary && data.attendanceSummary.totalSessions > 0 && (
+                  <div className="sm:ml-auto flex gap-4 text-center">
+                    <div>
+                      <p className="text-xs text-gray-400">Sesiones</p>
+                      <p className="text-lg font-bold text-gray-800">{data.attendanceSummary.totalSessions}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-green-500">Asistió</p>
+                      <p className="text-lg font-bold text-green-700">{data.attendanceSummary.attended}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-red-400">Faltó</p>
+                      <p className="text-lg font-bold text-red-600">{data.attendanceSummary.missed}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {data.averages && (
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {scoreCards.map(({ label, value }) => (
                     <div key={label} className="bg-indigo-50 rounded-lg p-3 text-center">
                       <p className="text-xs text-indigo-500 font-medium mb-1">{label}</p>
@@ -88,7 +125,11 @@ export default function PlayerProgressPage() {
                 <div key={ev.id} className="bg-white border border-gray-200 rounded-lg p-4">
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <span className="text-xs text-gray-400 whitespace-nowrap">
-                      {new Date(ev.createdAt).toLocaleDateString('es-ES')}
+                      {new Date(ev.date ?? ev.createdAt).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">

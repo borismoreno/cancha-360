@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { evaluationsApi } from '../api/evaluations.api';
+import { playersApi } from '../api/players.api';
 import type { CreateEvaluationRequest } from '../types/evaluation';
 
 function ScoreSlider({
@@ -47,9 +48,18 @@ export default function CreateEvaluationPage() {
   const navigate = useNavigate();
   const { playerId } = useParams();
   const [form, setForm] = useState(initial);
+  const [playerName, setPlayerName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (playerId) {
+      playersApi.getProgress(Number(playerId)).then((res) => {
+        setPlayerName(res.data.player.name);
+      }).catch(() => {});
+    }
+  }, [playerId]);
 
   function setScore(field: keyof CreateEvaluationRequest, value: number | string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -79,8 +89,16 @@ export default function CreateEvaluationPage() {
   return (
     <Layout>
       <div className="w-full max-w-md">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-gray-400 hover:text-gray-600 transition-colors text-sm mb-4"
+        >
+          ← Volver
+        </button>
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Nueva Evaluación</h1>
-        <p className="text-sm text-gray-500 mb-6">Jugador ID: {playerId}</p>
+        {playerName && (
+          <p className="text-sm font-medium text-indigo-600 mb-6">{playerName}</p>
+        )}
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">

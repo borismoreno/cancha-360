@@ -60,6 +60,9 @@ export class EvaluationsService {
       where: isSuperAdmin
         ? { id: playerId }
         : { id: playerId, academyId: currentUser.academyId },
+      include: {
+        team: { select: { id: true, name: true, category: true } },
+      },
     });
 
     if (!player) {
@@ -113,7 +116,13 @@ export class EvaluationsService {
     const lastEvaluation = count > 0 ? evaluations[count - 1] : null;
 
     return {
-      player,
+      player: {
+        id: player.id,
+        name: player.name,
+        position: player.position,
+        birthdate: player.birthdate,
+        team: player.team,
+      },
       evaluations,
       averages,
       lastEvaluation,

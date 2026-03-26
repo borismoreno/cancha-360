@@ -22,4 +22,16 @@ export interface TrainingSession {
   date: string;
   status: 'SCHEDULED' | 'CANCELLED' | 'COMPLETED';
   cancelReason?: string;
+  team?: { id: number; name: string; category: string };
+}
+
+export interface SessionPlayer {
+  id: number;
+  name: string;
+  position?: string;
+  attendanceStatus: 'PRESENT' | 'ABSENT' | null;
+}
+
+export interface SessionDetail extends TrainingSession {
+  players: SessionPlayer[];
 }

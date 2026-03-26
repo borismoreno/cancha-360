@@ -1,6 +1,9 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { useAuth } from "../hooks/useAuth";
+import { academiesApi } from "../api/academies.api";
+import type { Academy } from "../types/academy";
 
 interface ActionCard {
   title: string;
@@ -30,25 +33,41 @@ const actions: ActionCard[] = [
   },
 ];
 
+const ROLE_LABEL: Record<string, string> = {
+  SUPER_ADMIN: "Super Admin",
+  DIRECTOR: "Director",
+  COACH: "Entrenador",
+  PARENT: "Padre / Tutor",
+};
 
 export default function DashboardPage() {
   const { user, isDirector, isCoach } = useAuth();
   const navigate = useNavigate();
+  const [academy, setAcademy] = useState<Academy | null>(null);
+
+  useEffect(() => {
+    if (user?.academyId) {
+      academiesApi.getCurrent().then((res) => setAcademy(res.data)).catch(() => {});
+    }
+  }, [user?.academyId]);
 
   const visible = actions.filter(
     (a) => user?.role && a.roles.some((r) => user.role!.includes(r)),
   );
+
+  const primaryRole = Array.isArray(user?.role) ? user?.role[0] : user?.role;
+  const roleLabel = primaryRole ? (ROLE_LABEL[primaryRole] ?? primaryRole) : "";
 
   return (
     <Layout>
       <div className="mb-6">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Bienvenido. Rol:{" "}
-          <span className="font-semibold text-gray-700">{user?.role}</span>
-          {user?.academyId && (
+          Bienvenido.{" "}
+          <span className="font-semibold text-gray-700">{roleLabel}</span>
+          {academy && (
             <span className="ml-2 text-gray-400">
-              · Academia #{user.academyId}
+              · {academy.name}
             </span>
           )}
         </p>

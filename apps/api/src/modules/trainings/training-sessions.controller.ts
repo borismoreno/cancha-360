@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseIntPipe,
   Patch,
@@ -21,6 +22,15 @@ export class TrainingSessionsController {
   constructor(
     private readonly trainingSessionsService: TrainingSessionsService,
   ) {}
+
+  @Get(':sessionId')
+  @Roles('COACH', 'DIRECTOR')
+  getSession(
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+    @CurrentUser() currentUser: { id: number; role: string; academyId: number },
+  ) {
+    return this.trainingSessionsService.getSession(sessionId, currentUser);
+  }
 
   @Patch(':sessionId/cancel')
   @Roles('COACH', 'DIRECTOR')

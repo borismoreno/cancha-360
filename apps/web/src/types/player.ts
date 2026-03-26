@@ -23,6 +23,7 @@ export interface Evaluation {
   attitudeScore: number;
   notes?: string;
   createdAt: string;
+  date: string;
 }
 
 export interface PlayerProgress {
@@ -30,6 +31,8 @@ export interface PlayerProgress {
     id: number;
     name: string;
     position?: string;
+    birthdate?: string;
+    team?: { id: number; name: string; category: string };
   };
   evaluations: Evaluation[];
   averages: {
@@ -37,5 +40,10 @@ export interface PlayerProgress {
     tactical: number;
     physical: number;
     attitude: number;
+  };
+  attendanceSummary?: {
+    totalSessions: number;
+    attended: number;
+    missed: number;
   };
 }

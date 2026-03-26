@@ -1,40 +1,58 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { trainingsApi } from '../api/trainings.api';
+import type { SessionDetail, SessionPlayer } from '../types/training';
+
+const STATUS_LABEL: Record<string, string> = {
+  SCHEDULED: 'Programada',
+  CANCELLED: 'Cancelada',
+  COMPLETED: 'Completada',
+};
 
 export default function TrainingSessionPage() {
   const { sessionId } = useParams();
+  const navigate = useNavigate();
 
-  const [attendance, setAttendance] = useState({
-    playerId: '',
-    status: 'PRESENT' as 'PRESENT' | 'ABSENT',
-  });
-  const [attendanceLoading, setAttendanceLoading] = useState(false);
-  const [attendanceSuccess, setAttendanceSuccess] = useState(false);
-  const [attendanceError, setAttendanceError] = useState('');
+  const [session, setSession] = useState<SessionDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const [savingPlayer, setSavingPlayer] = useState<number | null>(null);
+  const [attendance, setAttendance] = useState<Record<number, 'PRESENT' | 'ABSENT'>>({});
 
   const [cancelReason, setCancelReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
   const [cancelError, setCancelError] = useState('');
 
-  async function handleAttendance(e: React.FormEvent) {
-    e.preventDefault();
-    setAttendanceError('');
-    setAttendanceLoading(true);
+  useEffect(() => {
+    trainingsApi
+      .getSession(Number(sessionId))
+      .then((res) => {
+        setSession(res.data);
+        const initial: Record<number, 'PRESENT' | 'ABSENT'> = {};
+        res.data.players.forEach((p) => {
+          if (p.attendanceStatus) initial[p.id] = p.attendanceStatus;
+        });
+        setAttendance(initial);
+      })
+      .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar sesión'))
+      .finally(() => setLoading(false));
+  }, [sessionId]);
+
+  async function handleAttendance(player: SessionPlayer, status: 'PRESENT' | 'ABSENT') {
+    setSavingPlayer(player.id);
     try {
       await trainingsApi.recordAttendance(Number(sessionId), {
-        playerId: Number(attendance.playerId),
-        status: attendance.status,
+        playerId: player.id,
+        status,
       });
-      setAttendanceSuccess(true);
-      setAttendance({ playerId: '', status: 'PRESENT' });
-      setTimeout(() => setAttendanceSuccess(false), 3000);
+      setAttendance((prev) => ({ ...prev, [player.id]: status }));
     } catch (err: any) {
-      setAttendanceError(err?.response?.data?.message ?? 'Error al registrar asistencia');
+      alert(err?.response?.data?.message ?? 'Error al registrar asistencia');
     } finally {
-      setAttendanceLoading(false);
+      setSavingPlayer(null);
     }
   }
 
@@ -47,6 +65,7 @@ export default function TrainingSessionPage() {
         reason: cancelReason || undefined,
       });
       setCancelSuccess(true);
+      setSession((prev) => prev ? { ...prev, status: 'CANCELLED' } : prev);
     } catch (err: any) {
       setCancelError(err?.response?.data?.message ?? 'Error al cancelar sesión');
     } finally {
@@ -54,109 +73,153 @@ export default function TrainingSessionPage() {
     }
   }
 
+  const isCancelled = session?.status === 'CANCELLED' || cancelSuccess;
+
   return (
     <Layout>
       <div className="w-full max-w-lg">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Sesión de Entrenamiento</h1>
-        <p className="text-sm text-gray-500 mb-6">Sesión ID: {sessionId}</p>
+        {session && (
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => navigate(`/teams/${session.teamId}/sessions`)}
+              className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
+            >
+              ← {session.team?.name ?? 'Sesiones'}
+            </button>
+          </div>
+        )}
+
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+          Sesión de Entrenamiento
+        </h1>
+        {session && (
+          <div className="mb-6">
+            <p className="text-sm text-gray-500">
+              {new Date(session.date).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+            {session.team && (
+              <p className="text-sm text-gray-500">{session.team.name} · {session.team.category}</p>
+            )}
+            <span className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+              session.status === 'SCHEDULED' ? 'bg-blue-50 text-blue-700' :
+              session.status === 'CANCELLED' ? 'bg-red-50 text-red-700' :
+              'bg-green-50 text-green-700'
+            }`}>
+              {STATUS_LABEL[session.status] ?? session.status}
+            </span>
+          </div>
+        )}
+
+        {loading && <p className="text-sm text-gray-400">Cargando...</p>}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm mb-4">
+            {error}
+          </div>
+        )}
 
         {/* Attendance */}
-        <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
-          <h2 className="font-semibold text-gray-800 mb-4">Registrar Asistencia</h2>
+        {session && !isCancelled && (
+          <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
+            <h2 className="font-semibold text-gray-800 mb-4">
+              Asistencia — {session.players.length} jugadores
+            </h2>
 
-          {attendanceSuccess && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
-              Asistencia registrada correctamente.
-            </div>
-          )}
-          {attendanceError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-              {attendanceError}
-            </div>
-          )}
+            {session.players.length === 0 && (
+              <p className="text-sm text-gray-400">No hay jugadores en este equipo.</p>
+            )}
 
-          <form onSubmit={handleAttendance} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ID del Jugador
-              </label>
-              <input
-                type="number"
-                required
-                value={attendance.playerId}
-                onChange={(e) => setAttendance({ ...attendance, playerId: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-              <div className="flex gap-3">
-                {(['PRESENT', 'ABSENT'] as const).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setAttendance({ ...attendance, status: s })}
-                    className={`flex-1 py-3 rounded-md text-sm font-medium transition-colors ${
-                      attendance.status === s
-                        ? s === 'PRESENT'
-                          ? 'bg-green-600 text-white'
-                          : 'bg-red-500 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+            <div className="space-y-3">
+              {session.players.map((player) => {
+                const current = attendance[player.id] ?? null;
+                const isSaving = savingPlayer === player.id;
+
+                return (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-lg"
                   >
-                    {s === 'PRESENT' ? 'Presente' : 'Ausente'}
-                  </button>
-                ))}
-              </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate">{player.name}</p>
+                      {player.position && (
+                        <p className="text-xs text-gray-400">{player.position}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => handleAttendance(player, 'PRESENT')}
+                        disabled={isSaving}
+                        className={`py-2 px-3 rounded-md text-xs font-medium transition-colors disabled:opacity-50 ${
+                          current === 'PRESENT'
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700'
+                        }`}
+                      >
+                        Presente
+                      </button>
+                      <button
+                        onClick={() => handleAttendance(player, 'ABSENT')}
+                        disabled={isSaving}
+                        className={`py-2 px-3 rounded-md text-xs font-medium transition-colors disabled:opacity-50 ${
+                          current === 'ABSENT'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-700'
+                        }`}
+                      >
+                        Ausente
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <button
-              type="submit"
-              disabled={attendanceLoading}
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
-            >
-              {attendanceLoading ? 'Guardando...' : 'Registrar'}
-            </button>
-          </form>
-        </div>
+          </div>
+        )}
 
         {/* Cancel session */}
-        <div className="bg-white border border-red-200 rounded-xl p-4 sm:p-6">
-          <h2 className="font-semibold text-red-700 mb-4">Cancelar Sesión</h2>
+        {session && !isCancelled && (
+          <div className="bg-white border border-red-200 rounded-xl p-4 sm:p-6">
+            <h2 className="font-semibold text-red-700 mb-4">Cancelar Sesión</h2>
 
-          {cancelSuccess && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
-              Sesión cancelada correctamente.
-            </div>
-          )}
-          {cancelError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-              {cancelError}
-            </div>
-          )}
+            {cancelError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                {cancelError}
+              </div>
+            )}
 
-          <form onSubmit={handleCancel} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Motivo (opcional)
-              </label>
-              <input
-                type="text"
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                disabled={cancelSuccess}
-                className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-50"
-                placeholder="Ej: Lluvia, cancha ocupada..."
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={cancelLoading || cancelSuccess}
-              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
-            >
-              {cancelLoading ? 'Cancelando...' : 'Cancelar Sesión'}
-            </button>
-          </form>
-        </div>
+            <form onSubmit={handleCancel} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Motivo (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-red-400"
+                  placeholder="Ej: Lluvia, cancha ocupada..."
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={cancelLoading}
+                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+              >
+                {cancelLoading ? 'Cancelando...' : 'Cancelar Sesión'}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {isCancelled && session && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            Esta sesión fue cancelada.
+          </div>
+        )}
       </div>
     </Layout>
   );

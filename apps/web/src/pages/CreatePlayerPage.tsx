@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { playersApi } from '../api/players.api';
+import { teamsApi } from '../api/teams.api';
+import type { Team } from '../types/team';
 
 export default function CreatePlayerPage() {
   const navigate = useNavigate();
   const { teamId } = useParams();
+  const [team, setTeam] = useState<Team | null>(null);
   const [form, setForm] = useState({
     name: '',
     birthdate: '',
@@ -16,6 +19,12 @@ export default function CreatePlayerPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (teamId) {
+      teamsApi.getOne(Number(teamId)).then((res) => setTeam(res.data)).catch(() => {});
+    }
+  }, [teamId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +39,7 @@ export default function CreatePlayerPage() {
         parentEmail: form.parentEmail || undefined,
       });
       setSuccess(true);
-      setTimeout(() => navigate('/dashboard'), 1500);
+      setTimeout(() => navigate(`/teams/${teamId}/players`), 1500);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Error al crear jugador');
     } finally {
@@ -41,8 +50,16 @@ export default function CreatePlayerPage() {
   return (
     <Layout>
       <div className="w-full max-w-md">
+        <button
+          onClick={() => navigate(`/teams/${teamId}/players`)}
+          className="text-gray-400 hover:text-gray-600 transition-colors text-sm mb-4"
+        >
+          ← {team ? team.name : 'Jugadores'}
+        </button>
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Agregar Jugador</h1>
-        <p className="text-sm text-gray-500 mb-6">Equipo ID: {teamId}</p>
+        {team && (
+          <p className="text-sm text-gray-500 mb-6">{team.name} · {team.category}</p>
+        )}
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
@@ -67,6 +84,7 @@ export default function CreatePlayerPage() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Nombre completo del jugador"
             />
           </div>
 
@@ -92,7 +110,7 @@ export default function CreatePlayerPage() {
               value={form.position}
               onChange={(e) => setForm({ ...form, position: e.target.value })}
               className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ej: Delantero"
+              placeholder="Ej: Delantero, Portero..."
             />
           </div>
 

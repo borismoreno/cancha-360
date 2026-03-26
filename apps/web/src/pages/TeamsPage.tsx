@@ -7,31 +7,32 @@ import type { Team } from '../types/team';
 
 export default function TeamsPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { isDirector, isCoach } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user?.academyId) return;
     teamsApi
-      .list(user.academyId)
+      .list()
       .then((res) => setTeams(res.data))
       .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar equipos'))
       .finally(() => setLoading(false));
-  }, [user?.academyId]);
+  }, []);
 
   return (
     <Layout>
       <div className="w-full max-w-2xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">Mis Equipos</h1>
-          <button
-            onClick={() => navigate('/teams/new')}
-            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
-          >
-            + Nuevo Equipo
-          </button>
+          {(isDirector || isCoach) && (
+            <button
+              onClick={() => navigate('/teams/new')}
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
+            >
+              + Nuevo Equipo
+            </button>
+          )}
         </div>
 
         {loading && <p className="text-sm text-gray-400">Cargando...</p>}
@@ -44,12 +45,14 @@ export default function TeamsPage() {
         {!loading && teams.length === 0 && !error && (
           <div className="text-center py-16 text-gray-400">
             <p className="text-sm">No hay equipos registrados.</p>
-            <button
-              onClick={() => navigate('/teams/new')}
-              className="mt-4 text-indigo-600 text-sm hover:underline"
-            >
-              Crear el primer equipo
-            </button>
+            {(isDirector || isCoach) && (
+              <button
+                onClick={() => navigate('/teams/new')}
+                className="mt-4 text-indigo-600 text-sm hover:underline"
+              >
+                Crear el primer equipo
+              </button>
+            )}
           </div>
         )}
 
@@ -64,7 +67,6 @@ export default function TeamsPage() {
                 {team.name}
               </h2>
               <p className="text-sm text-gray-500 mt-1">{team.category}</p>
-              <p className="text-xs text-gray-400 mt-3">ID: {team.id}</p>
             </button>
           ))}
         </div>

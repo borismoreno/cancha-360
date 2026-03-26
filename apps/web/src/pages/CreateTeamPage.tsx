@@ -8,7 +8,6 @@ export default function CreateTeamPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [form, setForm] = useState({ name: "", category: "" });
-  const [academyId, setAcademyId] = useState(user?.academyId?.toString() ?? "");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -17,10 +16,16 @@ export default function CreateTeamPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    const academyId = user?.academyId;
+    if (!academyId) {
+      setError("No se encontró la academia.");
+      setLoading(false);
+      return;
+    }
     try {
-      await teamsApi.create(Number(academyId), form);
+      await teamsApi.create(academyId, form);
       setSuccess(true);
-      setTimeout(() => navigate("/dashboard"), 1500);
+      setTimeout(() => navigate("/teams"), 1500);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? "Error al crear equipo");
     } finally {
@@ -31,6 +36,12 @@ export default function CreateTeamPage() {
   return (
     <Layout>
       <div className="w-full max-w-md">
+        <button
+          onClick={() => navigate("/teams")}
+          className="text-gray-400 hover:text-gray-600 transition-colors text-sm mb-4"
+        >
+          ← Mis Equipos
+        </button>
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Crear Equipo</h1>
 
         {success && (
@@ -48,21 +59,6 @@ export default function CreateTeamPage() {
           onSubmit={handleSubmit}
           className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 space-y-4"
         >
-          {user?.role?.includes("SUPER_ADMIN") && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ID de Academia
-              </label>
-              <input
-                type="number"
-                required
-                value={academyId}
-                onChange={(e) => setAcademyId(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-          )}
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Nombre del equipo
@@ -101,7 +97,7 @@ export default function CreateTeamPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/teams")}
               className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
               Cancelar

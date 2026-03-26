@@ -2,21 +2,30 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { playersApi } from '../api/players.api';
+import { teamsApi } from '../api/teams.api';
 import { useAuth } from '../hooks/useAuth';
 import type { Player } from '../types/player';
+import type { Team } from '../types/team';
 
 export default function PlayersListPage() {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const { isCoach, isDirector } = useAuth();
   const [players, setPlayers] = useState<Player[]>([]);
+  const [team, setTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    playersApi
-      .list(Number(teamId))
-      .then((res) => setPlayers(res.data))
+    const id = Number(teamId);
+    Promise.all([
+      playersApi.list(id),
+      teamsApi.getOne(id),
+    ])
+      .then(([playersRes, teamRes]) => {
+        setPlayers(playersRes.data);
+        setTeam(teamRes.data);
+      })
       .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar jugadores'))
       .finally(() => setLoading(false));
   }, [teamId]);
@@ -29,14 +38,16 @@ export default function PlayersListPage() {
             onClick={() => navigate(`/teams/${teamId}`)}
             className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
           >
-            ← Equipo
+            ← {team ? team.name : 'Equipo'}
           </button>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Jugadores</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Equipo #{teamId}</p>
+            {team && (
+              <p className="text-sm text-gray-500 mt-0.5">{team.name} · {team.category}</p>
+            )}
           </div>
           {(isCoach || isDirector) && (
             <button
@@ -79,7 +90,7 @@ export default function PlayersListPage() {
                 <div>
                   <p className="font-medium text-gray-800">{player.name}</p>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    {player.position ?? 'Sin posición'} · ID: {player.id}
+                    {player.position ?? 'Sin posición definida'}
                   </p>
                 </div>
                 <div className="flex gap-2">

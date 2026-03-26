@@ -1,11 +1,21 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
+import { teamsApi } from '../api/teams.api';
+import type { Team } from '../types/team';
 
 export default function TeamDetailPage() {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const { isCoach, isDirector } = useAuth();
+  const [team, setTeam] = useState<Team | null>(null);
+
+  useEffect(() => {
+    if (teamId) {
+      teamsApi.getOne(Number(teamId)).then((res) => setTeam(res.data)).catch(() => {});
+    }
+  }, [teamId]);
 
   const actions = [
     {
@@ -46,8 +56,12 @@ export default function TeamDetailPage() {
           </button>
         </div>
 
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Equipo #{teamId}</h1>
-        <p className="text-sm text-gray-500 mb-6">Selecciona una sección para continuar.</p>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+          {team ? team.name : '...'}
+        </h1>
+        {team && (
+          <p className="text-sm text-gray-500 mb-6">{team.category}</p>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {actions.map((action) => (

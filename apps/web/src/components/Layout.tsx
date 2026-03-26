@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { academiesApi } from "../api/academies.api";
 
 interface NavItem {
   label: string;
@@ -28,16 +29,25 @@ const navItems: NavItem[] = [
   { label: "Invitar Usuario", to: "/invite", roles: ["DIRECTOR"] },
 ];
 
+const ROLE_LABEL: Record<string, string> = {
+  SUPER_ADMIN: "Super Admin",
+  DIRECTOR: "Director",
+  COACH: "Entrenador",
+  PARENT: "Padre / Tutor",
+};
+
 function SidebarContent({
   visible,
   location,
   user,
+  academyName,
   logout,
   onNavClick,
 }: {
   visible: NavItem[];
   location: ReturnType<typeof useLocation>;
   user: ReturnType<typeof useAuth>["user"];
+  academyName: string | null;
   logout: () => void;
   onNavClick?: () => void;
 }) {
@@ -47,6 +57,9 @@ function SidebarContent({
         <span className="text-lg font-bold tracking-wide text-white">
           Cancha360
         </span>
+        {academyName && (
+          <p className="text-xs text-gray-400 mt-1 truncate">{academyName}</p>
+        )}
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {visible.map((item) => (
@@ -65,9 +78,8 @@ function SidebarContent({
         ))}
       </nav>
       <div className="px-4 py-4 border-t border-gray-700">
-        <p className="text-xs text-gray-400 mb-2 truncate">
-          {user?.role}
-          {user?.academyId ? ` · #${user.academyId}` : ""}
+        <p className="text-xs text-indigo-400 font-medium mb-2">
+          {user?.role ? (ROLE_LABEL[user.role] ?? user.role) : ""}
         </p>
         <button
           onClick={logout}
@@ -84,12 +96,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [academyName, setAcademyName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.academyId) {
+      academiesApi.getCurrent().then((res) => {
+        setAcademyName(res.data?.name ?? null);
+      }).catch(() => {});
+    }
+  }, [user?.academyId]);
 
   const visible = navItems.filter((item) => {
     if (!item.roles) return true;
     if (!user?.role) return false;
     return item.roles.some((r) => user.role!.includes(r));
   });
+
+  const primaryRole = Array.isArray(user?.role) ? user?.role[0] : user?.role;
+  const roleLabel = primaryRole ? (ROLE_LABEL[primaryRole] ?? primaryRole) : "—";
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -101,7 +125,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* Sidebar: slide-in drawer on mobile, fixed on desktop */}
+      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white flex flex-col shrink-0 transition-transform duration-300 ease-in-out md:relative md:w-56 md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -111,6 +135,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           visible={visible}
           location={location}
           user={user}
+          academyName={academyName}
           logout={logout}
           onNavClick={() => setSidebarOpen(false)}
         />
@@ -140,12 +165,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 />
               </svg>
             </button>
-            <span className="text-sm text-gray-400 truncate hidden sm:block">
-              {location.pathname}
-            </span>
+            {academyName && (
+              <span className="text-sm font-medium text-gray-600 truncate hidden sm:block">
+                {academyName}
+              </span>
+            )}
           </div>
           <span className="text-xs md:text-sm font-semibold text-gray-700 bg-indigo-50 px-2 md:px-3 py-1 rounded-full shrink-0">
-            {user?.role ?? "—"}
+            {roleLabel}
           </span>
         </header>
 

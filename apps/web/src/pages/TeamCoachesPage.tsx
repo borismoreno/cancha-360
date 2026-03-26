@@ -2,14 +2,22 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { teamCoachesApi } from '../api/teamCoaches.api';
+import { academiesApi } from '../api/academies.api';
 import { useAuth } from '../hooks/useAuth';
 import type { TeamCoach } from '../types/teamCoach';
+import type { AcademyMember } from '../types/academy';
+
+const COACH_ROLE_LABEL: Record<string, string> = {
+  HEAD: 'Entrenador Principal',
+  ASSISTANT: 'Asistente',
+};
 
 export default function TeamCoachesPage() {
   const { teamId } = useParams();
   const { isDirector } = useAuth();
 
   const [coaches, setCoaches] = useState<TeamCoach[]>([]);
+  const [availableCoaches, setAvailableCoaches] = useState<AcademyMember[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState('');
 
@@ -31,10 +39,14 @@ export default function TeamCoachesPage() {
 
   useEffect(() => {
     loadCoaches();
-  }, [teamId]);
+    if (isDirector) {
+      academiesApi.getMembers('COACH').then((res) => setAvailableCoaches(res.data)).catch(() => {});
+    }
+  }, [teamId, isDirector]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.userId) return;
     setAddError('');
     setAddLoading(true);
     try {
@@ -61,11 +73,15 @@ export default function TeamCoachesPage() {
     }
   }
 
+  const assignedIds = new Set(coaches.map((c) => c.userId));
+  const unassigned = availableCoaches.filter((m) => !assignedIds.has(m.userId));
+
   return (
     <Layout>
       <div className="w-full max-w-lg">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Entrenadores del Equipo</h1>
-        <p className="text-sm text-gray-500 mb-6">Equipo ID: {teamId}</p>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
+          Entrenadores del Equipo
+        </h1>
 
         {/* List */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
@@ -85,10 +101,10 @@ export default function TeamCoachesPage() {
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">
-                    {coach.user?.name ?? `Usuario #${coach.userId}`}
+                    {coach.user?.name ?? 'Entrenador'}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {coach.role} · ID: {coach.userId}
+                    {coach.user?.email ?? ''} · {COACH_ROLE_LABEL[coach.role] ?? coach.role}
                   </p>
                 </div>
                 {isDirector && (
@@ -96,7 +112,7 @@ export default function TeamCoachesPage() {
                     onClick={() => handleRemove(coach.userId)}
                     className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors shrink-0 py-1 px-2"
                   >
-                    Eliminar
+                    Quitar
                   </button>
                 )}
               </li>
@@ -118,36 +134,53 @@ export default function TeamCoachesPage() {
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ID del Usuario
+                  Seleccionar Entrenador
                 </label>
-                <input
-                  type="number"
-                  required
-                  value={form.userId}
-                  onChange={(e) => setForm({ ...form, userId: e.target.value })}
-                  className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                {unassigned.length === 0 ? (
+                  <p className="text-sm text-gray-400">
+                    No hay entrenadores disponibles para agregar.
+                  </p>
+                ) : (
+                  <select
+                    required
+                    value={form.userId}
+                    onChange={(e) => setForm({ ...form, userId: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                  >
+                    <option value="">— Seleccionar entrenador —</option>
+                    {unassigned.map((m) => (
+                      <option key={m.userId} value={m.userId}>
+                        {m.name} ({m.email})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                <select
-                  value={form.role}
-                  onChange={(e) =>
-                    setForm({ ...form, role: e.target.value as 'HEAD' | 'ASSISTANT' })
-                  }
-                  className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="HEAD">Principal (HEAD)</option>
-                  <option value="ASSISTANT">Asistente (ASSISTANT)</option>
-                </select>
-              </div>
-              <button
-                type="submit"
-                disabled={addLoading}
-                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
-              >
-                {addLoading ? 'Agregando...' : 'Agregar'}
-              </button>
+
+              {unassigned.length > 0 && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                    <select
+                      value={form.role}
+                      onChange={(e) =>
+                        setForm({ ...form, role: e.target.value as 'HEAD' | 'ASSISTANT' })
+                      }
+                      className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                    >
+                      <option value="HEAD">Entrenador Principal</option>
+                      <option value="ASSISTANT">Asistente</option>
+                    </select>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={addLoading || !form.userId}
+                    className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
+                  >
+                    {addLoading ? 'Agregando...' : 'Agregar'}
+                  </button>
+                </>
+              )}
             </form>
           </div>
         )}

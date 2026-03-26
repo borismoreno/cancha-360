@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { trainingsApi } from '../api/trainings.api';
+import { teamsApi } from '../api/teams.api';
 import type { TrainingSession } from '../types/training';
+import type { Team } from '../types/team';
 
 const STATUS_LABEL: Record<string, string> = {
   SCHEDULED: 'Programada',
@@ -20,13 +22,20 @@ export default function SessionsListPage() {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
+  const [team, setTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    trainingsApi
-      .listSessions(Number(teamId))
-      .then((res) => setSessions(res.data))
+    const id = Number(teamId);
+    Promise.all([
+      trainingsApi.listSessions(id),
+      teamsApi.getOne(id),
+    ])
+      .then(([sessionsRes, teamRes]) => {
+        setSessions(sessionsRes.data);
+        setTeam(teamRes.data);
+      })
       .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar sesiones'))
       .finally(() => setLoading(false));
   }, [teamId]);
@@ -39,14 +48,16 @@ export default function SessionsListPage() {
             onClick={() => navigate(`/teams/${teamId}`)}
             className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
           >
-            ← Equipo
+            ← {team ? team.name : 'Equipo'}
           </button>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">Sesiones de Entrenamiento</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Equipo #{teamId}</p>
+            {team && (
+              <p className="text-sm text-gray-500 mt-0.5">{team.name} · {team.category}</p>
+            )}
           </div>
           <button
             onClick={() => navigate(`/teams/${teamId}/training-schedules/new`)}

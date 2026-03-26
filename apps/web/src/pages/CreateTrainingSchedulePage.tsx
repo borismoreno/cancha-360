@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { trainingsApi } from '../api/trainings.api';
+import { teamsApi } from '../api/teams.api';
+import type { Team } from '../types/team';
 
 const DAYS = [
   { label: 'Lun', value: 'MON' },
@@ -16,11 +18,18 @@ const DAYS = [
 export default function CreateTrainingSchedulePage() {
   const navigate = useNavigate();
   const { teamId } = useParams();
+  const [team, setTeam] = useState<Team | null>(null);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [form, setForm] = useState({ time: '', startDate: '', endDate: '', location: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (teamId) {
+      teamsApi.getOne(Number(teamId)).then((res) => setTeam(res.data)).catch(() => {});
+    }
+  }, [teamId]);
 
   function toggleDay(day: string) {
     setSelectedDays((prev) =>
@@ -45,7 +54,7 @@ export default function CreateTrainingSchedulePage() {
         location: form.location || undefined,
       });
       setSuccess(true);
-      setTimeout(() => navigate('/dashboard'), 1500);
+      setTimeout(() => navigate(`/teams/${teamId}/sessions`), 1500);
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Error al crear horario');
     } finally {
@@ -56,8 +65,18 @@ export default function CreateTrainingSchedulePage() {
   return (
     <Layout>
       <div className="w-full max-w-md">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Nuevo Horario de Entrenamiento</h1>
-        <p className="text-sm text-gray-500 mb-6">Equipo ID: {teamId}</p>
+        <button
+          onClick={() => navigate(`/teams/${teamId}`)}
+          className="text-gray-400 hover:text-gray-600 transition-colors text-sm mb-4"
+        >
+          ← {team ? team.name : 'Equipo'}
+        </button>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+          Nuevo Horario de Entrenamiento
+        </h1>
+        {team && (
+          <p className="text-sm text-gray-500 mb-6">{team.name} · {team.category}</p>
+        )}
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">

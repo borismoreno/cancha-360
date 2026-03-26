@@ -32,4 +32,38 @@ export class AcademiesService {
       return { academy, invitation };
     });
   }
+
+  async getCurrent(currentUser: { id: number; role: string; academyId?: number }) {
+    if (!currentUser.academyId) return null;
+    return prisma.academy.findUnique({
+      where: { id: currentUser.academyId },
+      select: { id: true, name: true, city: true, country: true },
+    });
+  }
+
+  async getMembers(
+    currentUser: { id: number; role: string; academyId?: number },
+    role?: string,
+  ) {
+    const academyId = currentUser.academyId;
+    if (!academyId) return [];
+
+    const memberships = await prisma.membership.findMany({
+      where: {
+        academyId,
+        status: 'ACTIVE',
+        ...(role ? { role: { has: role as Role } } : {}),
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    return memberships.map((m) => ({
+      userId: m.userId,
+      name: m.user.name,
+      email: m.user.email,
+      roles: m.role,
+    }));
+  }
 }

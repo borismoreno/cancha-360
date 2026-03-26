@@ -28,7 +28,50 @@ export class TrainingSessionsService {
     return prisma.trainingSession.findMany({
       where: { teamId },
       orderBy: { date: 'asc' },
+      include: {
+        team: { select: { id: true, name: true, category: true } },
+      },
     });
+  }
+
+  async getSession(
+    sessionId: number,
+    currentUser: { id: number; role: string; academyId?: number },
+  ) {
+    const isSuperAdmin = currentUser.role === 'SUPER_ADMIN';
+
+    const session = await prisma.trainingSession.findFirst({
+      where: isSuperAdmin
+        ? { id: sessionId }
+        : { id: sessionId, academyId: currentUser.academyId },
+      include: {
+        team: { select: { id: true, name: true, category: true } },
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(MESSAGES.TRAINING.SESSION_NOT_FOUND(sessionId));
+    }
+
+    const players = await prisma.player.findMany({
+      where: { teamId: session.teamId },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, position: true },
+    });
+
+    const attendances = await prisma.attendance.findMany({
+      where: { trainingId: sessionId },
+    });
+
+    const attendanceMap = new Map(attendances.map((a) => [a.playerId, a.status]));
+
+    return {
+      ...session,
+      players: players.map((p) => ({
+        ...p,
+        attendanceStatus: attendanceMap.get(p.id) ?? null,
+      })),
+    };
   }
 
   async cancelSession(
