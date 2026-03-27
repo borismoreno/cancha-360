@@ -57,9 +57,9 @@ function SidebarContent({
         <span className="text-lg font-bold tracking-wide text-white">
           Cancha360
         </span>
-        {academyName && (
+        {/* {academyName && (
           <p className="text-xs text-gray-400 mt-1 truncate">{academyName}</p>
-        )}
+        )} */}
       </div>
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {visible.map((item) => (
@@ -79,7 +79,7 @@ function SidebarContent({
       </nav>
       <div className="px-4 py-4 border-t border-gray-700">
         <p className="text-xs text-indigo-400 font-medium mb-2">
-          {user?.role ? (ROLE_LABEL[user.role] ?? user.role) : ""}
+          {user?.role?.[0] ? (ROLE_LABEL[user.role[0]] ?? user.role[0]) : ""}
         </p>
         <button
           onClick={logout}
@@ -100,9 +100,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user?.academyId) {
-      academiesApi.getCurrent().then((res) => {
-        setAcademyName(res.data?.name ?? null);
-      }).catch(() => {});
+      academiesApi
+        .getCurrent()
+        .then((res) => {
+          setAcademyName(res.data?.name ?? null);
+        })
+        .catch(() => {});
     }
   }, [user?.academyId]);
 
@@ -113,7 +116,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   });
 
   const primaryRole = Array.isArray(user?.role) ? user?.role[0] : user?.role;
-  const roleLabel = primaryRole ? (ROLE_LABEL[primaryRole] ?? primaryRole) : "—";
+  const roleLabel = primaryRole
+    ? (ROLE_LABEL[primaryRole] ?? primaryRole)
+    : "—";
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
