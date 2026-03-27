@@ -40,7 +40,6 @@ function SidebarContent({
   visible,
   location,
   user,
-  academyName,
   logout,
   onNavClick,
 }: {
