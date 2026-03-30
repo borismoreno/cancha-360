@@ -1,34 +1,30 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
+import { MetricCard } from "../components/MetricCard";
+import { ActivityItem, type ActivitySignal } from "../components/ActivityItem";
+import { TeamCard } from "../components/TeamCard";
+import { MainCTA } from "../components/MainCTA";
+import { MomentumWidget } from "../components/MomentumWidget";
 import { useAuth } from "../hooks/useAuth";
-import { academiesApi } from "../api/academies.api";
 import { teamsApi } from "../api/teams.api";
 import { playersApi } from "../api/players.api";
-import type { Academy } from "../types/academy";
 import type { Team } from "../types/team";
 import type { Player, Evaluation } from "../types/player";
 
 const ROLE_LABEL: Record<string, string> = {
-  SUPER_ADMIN: "Super Admin",
+  SUPER_ADMIN: "Admin",
   DIRECTOR: "Director",
-  COACH: "Entrenador",
-  PARENT: "Padre / Tutor",
+  COACH: "Coach",
+  PARENT: "",
 };
 
 const SCORE_LABEL: Record<string, string> = {
-  technicalScore: "Técnica",
-  tacticalScore: "Táctica",
-  physicalScore: "Físico",
-  attitudeScore: "Actitud",
+  technicalScore: "Técnica individual",
+  tacticalScore: "Táctica en campo",
+  physicalScore: "Nivel de resistencia",
+  attitudeScore: "Actitud en campo",
 };
-
-type SignalColor = "green" | "red" | "blue" | "gray";
-
-interface ActivitySignal {
-  text: string;
-  color: SignalColor;
-}
 
 interface PlayerRow {
   player: Player;
@@ -38,10 +34,10 @@ interface PlayerRow {
 
 function computeSignal(evaluations: Evaluation[]): ActivitySignal {
   if (evaluations.length === 0) {
-    return { text: "Sin evaluaciones aún", color: "gray" };
+    return { description: "Sin evaluaciones aún", color: "gray" };
   }
   if (evaluations.length === 1) {
-    return { text: "Evaluado recientemente", color: "blue" };
+    return { description: "Evaluado recientemente", color: "blue" };
   }
 
   const last = evaluations[evaluations.length - 1];
@@ -49,76 +45,122 @@ function computeSignal(evaluations: Evaluation[]): ActivitySignal {
 
   const deltas = (
     ["technicalScore", "tacticalScore", "physicalScore", "attitudeScore"] as const
-  ).map((key) => ({
-    label: SCORE_LABEL[key],
-    delta: last[key] - prev[key],
-  }));
+  ).map((key) => ({ label: SCORE_LABEL[key], delta: last[key] - prev[key] }));
 
   const biggest = deltas.reduce((a, b) =>
     Math.abs(a.delta) >= Math.abs(b.delta) ? a : b
   );
 
   if (biggest.delta === 0) {
-    return { text: "Sin cambios recientes", color: "gray" };
+    return { description: "Sin cambios recientes", color: "gray" };
   }
 
   const sign = biggest.delta > 0 ? "+" : "";
   return {
-    text: `${biggest.label} ${sign}${biggest.delta}`,
+    description: biggest.label,
+    badge: `${sign}${biggest.delta}`,
     color: biggest.delta > 0 ? "green" : "red",
   };
 }
 
-const SIGNAL_STYLES: Record<SignalColor, string> = {
-  green: "bg-green-50 text-green-700",
-  red: "bg-red-50 text-red-600",
-  blue: "bg-blue-50 text-blue-600",
-  gray: "bg-gray-100 text-gray-400",
-};
+// ─── Icon helpers (for metric cards) ────────────────────────────────────────
 
-function MetricCard({
-  value,
-  label,
-  sub,
-}: {
-  value: number | string;
-  label: string;
-  sub?: string;
-}) {
+function IconGroups() {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-1">
-      <span className="text-3xl font-bold text-indigo-700">{value}</span>
-      <span className="text-sm text-gray-700 font-medium">{label}</span>
-      {sub && <span className="text-xs text-gray-400">{sub}</span>}
-    </div>
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+    </svg>
   );
 }
+
+function IconPerson() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+    </svg>
+  );
+}
+
+function IconChart() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+      <path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zM16.2 13h2.8v6h-2.8v-6z" />
+    </svg>
+  );
+}
+
+// ─── Action button (right panel & mobile) ────────────────────────────────────
+
+function ActionButton({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 bg-surface-high rounded-2xl px-4 py-3.5 hover:bg-surface-highest transition-colors group"
+    >
+      <span className="text-on-surface-variant shrink-0">{icon}</span>
+      <span className="font-display text-sm font-semibold text-white flex-1 text-left">
+        {label}
+      </span>
+      <svg
+        className="w-4 h-4 text-on-surface-variant group-hover:text-primary transition-colors shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  );
+}
+
+function PlusCircleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+    </svg>
+  );
+}
+
+function PersonPlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+      <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+    </svg>
+  );
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const { user, isDirector, isCoach } = useAuth();
   const navigate = useNavigate();
 
-  const [academy, setAcademy] = useState<Academy | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [playerRows, setPlayerRows] = useState<PlayerRow[]>([]);
   const [totalPlayers, setTotalPlayers] = useState(0);
+  const [teamPlayerCounts, setTeamPlayerCounts] = useState<Map<number, number>>(new Map());
+  const [totalEvaluations, setTotalEvaluations] = useState(0);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [loadingActivity, setLoadingActivity] = useState(true);
 
   const primaryRole = Array.isArray(user?.role) ? user?.role[0] : user?.role;
-  const roleLabel = primaryRole ? (ROLE_LABEL[primaryRole] ?? primaryRole) : "";
+
+  // Greeting
+  const hour = new Date().getHours();
+  const greetingTime =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greetingName = primaryRole ? (ROLE_LABEL[primaryRole] ?? primaryRole) : "";
 
   useEffect(() => {
     const promises: Promise<unknown>[] = [];
-
-    if (user?.academyId) {
-      promises.push(
-        academiesApi
-          .getCurrent()
-          .then((res) => setAcademy(res.data))
-          .catch(() => {})
-      );
-    }
 
     if (isDirector || isCoach) {
       promises.push(
@@ -131,40 +173,54 @@ export default function DashboardPage() {
             const playerResults = await Promise.allSettled(
               teamList.map((t) => playersApi.list(t.id))
             );
+
             const allPlayers: Player[] = [];
-            playerResults.forEach((r) => {
-              if (r.status === "fulfilled") allPlayers.push(...r.value.data);
+            const counts = new Map<number, number>();
+
+            playerResults.forEach((r, i) => {
+              if (r.status === "fulfilled") {
+                const teamId = teamList[i].id;
+                counts.set(teamId, r.value.data.length);
+                allPlayers.push(...r.value.data);
+              }
             });
+
             setTotalPlayers(allPlayers.length);
+            setTeamPlayerCounts(counts);
             setLoadingMetrics(false);
 
-            // Fetch progress for up to 6 players to show activity
+            // Fetch progress for up to 6 players
             const sample = allPlayers.slice(0, 6);
             const progressResults = await Promise.allSettled(
               sample.map((p) => playersApi.getProgress(p.id))
             );
 
             const rows: PlayerRow[] = [];
+            let evalTotal = 0;
+
             progressResults.forEach((r, i) => {
               if (r.status === "fulfilled") {
+                const evals = r.value.data.evaluations ?? [];
+                const count = evals.length;
+                evalTotal += count;
                 rows.push({
                   player: sample[i],
-                  signal: computeSignal(r.value.data.evaluations ?? []),
-                  evaluationCount: r.value.data.evaluations?.length ?? 0,
+                  signal: computeSignal(evals),
+                  evaluationCount: count,
                 });
               } else {
                 rows.push({
                   player: sample[i],
-                  signal: { text: "Evaluado recientemente", color: "blue" },
+                  signal: { description: "Evaluado recientemente", color: "blue" },
                   evaluationCount: 0,
                 });
               }
             });
+
             setPlayerRows(rows);
+            setTotalEvaluations(evalTotal);
           })
-          .catch(() => {
-            setLoadingMetrics(false);
-          })
+          .catch(() => setLoadingMetrics(false))
           .finally(() => setLoadingActivity(false))
       );
     } else {
@@ -175,237 +231,252 @@ export default function DashboardPage() {
     Promise.allSettled(promises);
   }, [user?.academyId, isDirector, isCoach]);
 
+  const evaluatedCount = playerRows.filter((r) => r.evaluationCount > 0).length;
+  const pendingCount = Math.max(0, playerRows.length - evaluatedCount);
+
   const adminActions = [
     {
-      title: "Crear Equipo",
-      description: "Agregar un nuevo equipo a la academia.",
+      label: "Crear equipo",
+      icon: <PlusCircleIcon />,
       to: "/teams/new",
       show: isDirector || isCoach,
     },
     {
-      title: "Invitar Entrenador o Padre",
-      description: "Enviar invitación por correo electrónico.",
+      label: "Invitar usuario",
+      icon: <PersonPlusIcon />,
       to: "/invite",
       show: isDirector,
     },
     {
-      title: "Crear Academia",
-      description: "Registrar una nueva academia en el sistema.",
+      label: "Crear Academia",
+      icon: <PlusCircleIcon />,
       to: "/admin/academies/new",
       show: primaryRole === "SUPER_ADMIN",
     },
   ].filter((a) => a.show);
 
-  const evaluatedCount = playerRows.filter((r) => r.evaluationCount > 0).length;
+  const isStaff = isDirector || isCoach;
 
   return (
     <Layout>
-      <div className="w-full max-w-2xl space-y-8">
+      {/* ── Two-column grid on desktop ── */}
+      <div className="flex flex-col md:flex-row gap-5 md:gap-6 items-start">
+        {/* ── Left / main column ── */}
+        <div className="w-full md:flex-1 min-w-0 space-y-5">
+          {/* Mobile greeting */}
+          {greetingName && (
+            <div className="md:hidden">
+              <h1
+                className="font-display font-bold text-white leading-tight"
+                style={{ fontSize: "2rem" }}
+              >
+                {greetingTime},{" "}
+                <br />
+                {greetingName}
+              </h1>
+            </div>
+          )}
 
-        {/* 1 — Greeting */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
-            {academy ? academy.name : "Tu academia en un vistazo"}
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">{roleLabel}</p>
-        </div>
-
-        {/* 2 — Metrics */}
-        {(isDirector || isCoach) && (
-          <div>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-              Estado actual
-            </h2>
-            {loadingMetrics ? (
-              <div className="grid grid-cols-2 gap-3">
-                {[0, 1].map((i) => (
-                  <div key={i} className="bg-gray-100 animate-pulse rounded-xl h-24" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <MetricCard
-                  value={teams.length}
-                  label={teams.length === 1 ? "Equipo activo" : "Equipos activos"}
-                  sub={
-                    teams.length > 0
-                      ? teams.map((t) => t.name).slice(0, 2).join(", ") +
-                        (teams.length > 2 ? "..." : "")
-                      : undefined
-                  }
-                />
-                <MetricCard
-                  value={totalPlayers}
-                  label={totalPlayers === 1 ? "Jugador en seguimiento" : "Jugadores en seguimiento"}
-                  sub={
-                    evaluatedCount > 0
-                      ? `${evaluatedCount} con evaluaciones`
-                      : "Aún sin evaluaciones"
-                  }
-                />
-              </div>
-            )}
-
-            {!loadingMetrics && totalPlayers > 0 && evaluatedCount === 0 && (
-              <p className="text-xs text-gray-400 mt-3 leading-relaxed">
-                Registra evaluaciones para ver el progreso de cada jugador en tiempo real.
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* 3 — Primary CTA */}
-        {(isDirector || isCoach) && (
-          <button
-            onClick={() => navigate("/teams")}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-4 px-6 text-left transition-colors group"
-          >
-            <p className="text-base font-semibold">
-              Ver cómo están mejorando tus jugadores
-            </p>
-            <p className="text-sm text-indigo-200 mt-0.5">
-              Evaluaciones, asistencia y evolución individual de cada jugador.
-            </p>
-          </button>
-        )}
-
-        {/* 4 — Player activity */}
-        {(isDirector || isCoach) && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-                Actividad reciente de jugadores
-              </h2>
-              {totalPlayers > 6 && !loadingActivity && (
-                <button
-                  onClick={() => navigate("/teams")}
-                  className="text-xs text-indigo-500 hover:underline"
-                >
-                  Ver todos →
-                </button>
+          {/* ── Metrics row ── */}
+          {isStaff && (
+            <div className="grid grid-cols-3 gap-3">
+              {loadingMetrics ? (
+                <>
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="bg-surface-high animate-pulse rounded-3xl h-24 md:h-32" />
+                  ))}
+                </>
+              ) : (
+                <>
+                  <MetricCard
+                    label="ACTIVE TEAMS"
+                    value={teams.length}
+                    sub={teams.length > 0 ? `${teams.length} activos` : undefined}
+                    icon={<IconGroups />}
+                  />
+                  <MetricCard
+                    label="TOTAL PLAYERS"
+                    value={totalPlayers}
+                    sub={evaluatedCount > 0 ? `Elite status: ${evaluatedCount}` : undefined}
+                    icon={<IconPerson />}
+                  />
+                  <MetricCard
+                    label="EVALUATIONS"
+                    value={totalEvaluations}
+                    sub={pendingCount > 0 ? `Pending: ${pendingCount}` : undefined}
+                    icon={<IconChart />}
+                  />
+                </>
               )}
             </div>
+          )}
 
-            {loadingActivity ? (
-              <div className="space-y-2">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="bg-gray-100 animate-pulse rounded-xl h-16" />
-                ))}
-              </div>
-            ) : playerRows.length === 0 ? (
-              <div className="bg-white border border-dashed border-gray-200 rounded-xl p-8 text-center">
-                <p className="text-sm text-gray-500 font-medium">
-                  Aún no has registrado evaluaciones.
-                </p>
-                <p className="text-sm text-gray-400 mt-1">
-                  Empieza a evaluar a tus jugadores para ver su progreso aquí.
-                </p>
-                <button
-                  onClick={() => navigate("/teams")}
-                  className="mt-4 inline-block text-sm text-indigo-600 hover:underline font-medium"
-                >
-                  Ir a mis equipos →
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {playerRows.map(({ player, signal, evaluationCount }) => (
-                  <button
-                    key={player.id}
-                    onClick={() => navigate(`/players/${player.id}/progress`)}
-                    className="w-full text-left bg-white border border-gray-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3 hover:border-indigo-300 transition-colors group"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">
-                        {player.name}
-                        {player.position && (
-                          <span className="font-normal text-gray-400">
-                            {" "}— {player.position}
-                          </span>
-                        )}
-                      </p>
-                      {evaluationCount > 0 && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {evaluationCount}{" "}
-                          {evaluationCount === 1 ? "evaluación" : "evaluaciones"}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={`text-xs font-semibold px-2 py-1 rounded-full ${SIGNAL_STYLES[signal.color]}`}
-                      >
-                        {signal.text}
-                      </span>
-                    </div>
-                  </button>
-                ))}
+          {/* ── CTA banner ── */}
+          {isStaff && (
+            <MainCTA
+              title="Ver cómo están mejorando tus jugadores"
+              subtitle="Accede al panel de rendimiento avanzado y analiza la evolución táctica de cada atleta."
+              onClick={() => navigate("/teams")}
+            />
+          )}
 
-                {totalPlayers > 6 && (
+          {/* ── Activity section ── */}
+          {isStaff && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-display font-bold text-white" style={{ fontSize: "1.1rem" }}>
+                  Actividad Reciente
+                </h2>
+                {!loadingActivity && playerRows.length > 0 && (
                   <button
                     onClick={() => navigate("/teams")}
-                    className="w-full text-sm text-gray-400 hover:text-indigo-600 transition-colors py-2 text-center"
+                    className="font-body text-xs font-semibold uppercase text-primary hover:opacity-80 transition-opacity"
+                    style={{ letterSpacing: "0.05em" }}
                   >
-                    Ver los {totalPlayers} jugadores →
+                    Ver historial
                   </button>
                 )}
               </div>
-            )}
-          </div>
-        )}
 
-        {/* 5 — Teams quick list */}
-        {(isDirector || isCoach) && !loadingMetrics && teams.length > 0 && (
-          <div>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-              Mis equipos
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {teams.map((team) => (
-                <button
-                  key={team.id}
-                  onClick={() => navigate(`/teams/${team.id}`)}
-                  className="text-left bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-sm transition-all group"
-                >
-                  <p className="font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors">
-                    {team.name}
+              {loadingActivity ? (
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="bg-surface-high animate-pulse rounded-2xl h-16" />
+                  ))}
+                </div>
+              ) : playerRows.length === 0 ? (
+                <div className="bg-surface-high rounded-3xl p-8 text-center">
+                  <p className="font-display text-sm font-medium text-white">
+                    Aún no has registrado evaluaciones.
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{team.category}</p>
-                </button>
-              ))}
+                  <p className="font-body text-xs text-on-surface-variant mt-1">
+                    Empieza a evaluar a tus jugadores para ver su progreso aquí.
+                  </p>
+                  <button
+                    onClick={() => navigate("/teams")}
+                    className="mt-4 font-body text-sm text-primary hover:opacity-80 transition-opacity font-medium"
+                  >
+                    Ir a mis equipos →
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {playerRows.map(({ player, signal, evaluationCount: _ }) => (
+                    <ActivityItem
+                      key={player.id}
+                      name={player.name}
+                      position={player.position}
+                      signal={signal}
+                      onClick={() => navigate(`/players/${player.id}/progress`)}
+                    />
+                  ))}
+                  {totalPlayers > 6 && (
+                    <button
+                      onClick={() => navigate("/teams")}
+                      className="w-full font-body text-sm text-on-surface-variant hover:text-primary transition-colors py-2 text-center"
+                    >
+                      Ver los {totalPlayers} jugadores →
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* 6 — Admin actions */}
-        {adminActions.length > 0 && (
-          <div>
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
-              Gestión de la academia
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* ── Teams (mobile only) ── */}
+          {isStaff && !loadingMetrics && teams.length > 0 && (
+            <div className="md:hidden">
+              <h2
+                className="font-display font-bold text-white mb-3"
+                style={{ fontSize: "1.1rem" }}
+              >
+                Mis equipos
+              </h2>
+              <div className="grid grid-cols-2 gap-3">
+                {teams.map((team) => (
+                  <TeamCard
+                    key={team.id}
+                    name={team.name}
+                    category={team.category}
+                    playerCount={teamPlayerCounts.get(team.id)}
+                    onClick={() => navigate(`/teams/${team.id}`)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Admin actions (mobile only) ── */}
+          {adminActions.length > 0 && (
+            <div className="md:hidden space-y-2">
               {adminActions.map((action) => (
-                <button
+                <ActionButton
                   key={action.to}
+                  icon={action.icon}
+                  label={action.label}
                   onClick={() => navigate(action.to)}
-                  className="text-left bg-white border border-gray-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-sm transition-all group"
-                >
-                  <p className="font-semibold text-gray-700 group-hover:text-indigo-600 transition-colors text-sm">
-                    {action.title}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{action.description}</p>
-                </button>
+                />
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* PARENT */}
-        {!isDirector && !isCoach && primaryRole !== "SUPER_ADMIN" && (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-sm">
-              Bienvenido. Tu entrenador compartirá el progreso de tu jugador aquí.
-            </p>
+          {/* Parent view */}
+          {!isStaff && primaryRole !== "SUPER_ADMIN" && (
+            <div className="text-center py-16">
+              <p className="font-body text-sm text-on-surface-variant">
+                Bienvenido. Tu entrenador compartirá el progreso de tu jugador aquí.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ── Right panel (desktop only) ── */}
+        {isStaff && (
+          <div className="hidden md:flex flex-col gap-4 w-72 xl:w-80 shrink-0">
+            {/* Teams */}
+            {!loadingMetrics && teams.length > 0 && (
+              <div>
+                <h2
+                  className="font-display font-bold text-white mb-3"
+                  style={{ fontSize: "1.1rem" }}
+                >
+                  Mis equipos
+                </h2>
+                <div className="space-y-3">
+                  {teams.slice(0, 2).map((team) => (
+                    <TeamCard
+                      key={team.id}
+                      name={team.name}
+                      category={team.category}
+                      playerCount={teamPlayerCounts.get(team.id)}
+                      onClick={() => navigate(`/teams/${team.id}`)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Admin actions */}
+            {adminActions.length > 0 && (
+              <div className="space-y-2">
+                {adminActions.map((action) => (
+                  <ActionButton
+                    key={action.to}
+                    icon={action.icon}
+                    label={action.label}
+                    onClick={() => navigate(action.to)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Momentum widget */}
+            {!loadingActivity && (
+              <MomentumWidget
+                evaluatedCount={evaluatedCount}
+                total={playerRows.length}
+              />
+            )}
           </div>
         )}
       </div>
