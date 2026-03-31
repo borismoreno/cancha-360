@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { teamsApi } from '../api/teams.api';
 import { useAuth } from '../hooks/useAuth';
 import type { Team } from '../types/team';
+import { strings } from '../lib/strings';
 
 export default function TeamsPage() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function TeamsPage() {
     teamsApi
       .list()
       .then((res) => setTeams(res.data))
-      .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar equipos'))
+      .catch((err) => setError(err?.response?.data?.message ?? strings.teams.errorLoading))
       .finally(() => setLoading(false));
   }, []);
 
@@ -24,18 +25,18 @@ export default function TeamsPage() {
     <Layout>
       <div className="w-full max-w-2xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">Mis Equipos</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900">{strings.teams.heading}</h1>
           {(isDirector || isCoach) && (
             <button
               onClick={() => navigate('/teams/new')}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
             >
-              + Nuevo Equipo
+              {strings.teams.newButton}
             </button>
           )}
         </div>
 
-        {loading && <p className="text-sm text-gray-400">Cargando...</p>}
+        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
             {error}
@@ -44,13 +45,13 @@ export default function TeamsPage() {
 
         {!loading && teams.length === 0 && !error && (
           <div className="text-center py-16 text-gray-400">
-            <p className="text-sm">No hay equipos registrados.</p>
+            <p className="text-sm">{strings.teams.empty}</p>
             {(isDirector || isCoach) && (
               <button
                 onClick={() => navigate('/teams/new')}
                 className="mt-4 text-indigo-600 text-sm hover:underline"
               >
-                Crear el primer equipo
+                {strings.teams.createFirst}
               </button>
             )}
           </div>

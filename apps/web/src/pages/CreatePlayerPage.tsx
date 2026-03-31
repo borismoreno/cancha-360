@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { playersApi } from '../api/players.api';
 import { teamsApi } from '../api/teams.api';
 import type { Team } from '../types/team';
+import { strings } from '../lib/strings';
 
 export default function CreatePlayerPage() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function CreatePlayerPage() {
       setSuccess(true);
       setTimeout(() => navigate(`/teams/${teamId}/players`), 1500);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Error al crear jugador');
+      setError(err?.response?.data?.message ?? strings.players.errorCreate);
     } finally {
       setLoading(false);
     }
@@ -54,16 +55,16 @@ export default function CreatePlayerPage() {
           onClick={() => navigate(`/teams/${teamId}/players`)}
           className="text-gray-400 hover:text-gray-600 transition-colors text-sm mb-4"
         >
-          ← {team ? team.name : 'Jugadores'}
+          ← {team ? team.name : strings.players.playersFallback}
         </button>
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Agregar Jugador</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{strings.players.createTitle}</h1>
         {team && (
           <p className="text-sm text-gray-500 mb-6">{team.name} · {team.category}</p>
         )}
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
-            Jugador agregado exitosamente. Redirigiendo...
+            {strings.players.successCreate}
           </div>
         )}
         {error && (
@@ -77,20 +78,20 @@ export default function CreatePlayerPage() {
           className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 space-y-4"
         >
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{strings.players.nameLabel}</label>
             <input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Nombre completo del jugador"
+              placeholder={strings.players.namePlaceholder}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fecha de nacimiento *
+              {strings.players.birthdateLabel}
             </label>
             <input
               type="date"
@@ -103,24 +104,24 @@ export default function CreatePlayerPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Posición (opcional)
+              {strings.players.positionLabel}
             </label>
             <input
               type="text"
               value={form.position}
               onChange={(e) => setForm({ ...form, position: e.target.value })}
               className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ej: Delantero, Portero..."
+              placeholder={strings.players.positionPlaceholder}
             />
           </div>
 
           <div className="border-t border-gray-100 pt-4">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">
-              Datos del padre / madre (opcional)
+              {strings.players.guardianSection}
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{strings.players.guardianNameLabel}</label>
                 <input
                   type="text"
                   value={form.parentName}
@@ -129,7 +130,7 @@ export default function CreatePlayerPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{strings.players.guardianEmailLabel}</label>
                 <input
                   type="email"
                   value={form.parentEmail}
@@ -146,14 +147,14 @@ export default function CreatePlayerPage() {
               disabled={loading}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Guardando...' : 'Agregar Jugador'}
+              {loading ? strings.common.saving : strings.players.addPlayerButton}
             </button>
             <button
               type="button"
               onClick={() => navigate(-1)}
               className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
-              Cancelar
+              {strings.common.cancel}
             </button>
           </div>
         </form>

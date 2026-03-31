@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { playersApi } from '../api/players.api';
 import { useAuth } from '../hooks/useAuth';
 import type { PlayerProgress } from '../types/player';
+import { strings } from '../lib/strings';
 
 export default function PlayerProgressPage() {
   const { playerId } = useParams();
@@ -17,16 +18,16 @@ export default function PlayerProgressPage() {
     playersApi
       .getProgress(Number(playerId))
       .then((res) => setData(res.data))
-      .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar progreso'))
+      .catch((err) => setError(err?.response?.data?.message ?? strings.players.progress.errorLoading))
       .finally(() => setLoading(false));
   }, [playerId]);
 
   const scoreCards = data
     ? [
-        { label: 'Técnico', value: data.averages?.technical },
-        { label: 'Táctico', value: data.averages?.tactical },
-        { label: 'Físico', value: data.averages?.physical },
-        { label: 'Actitud', value: data.averages?.attitude },
+        { label: strings.players.progress.technicalLabel, value: data.averages?.technical },
+        { label: strings.players.progress.tacticalLabel, value: data.averages?.tactical },
+        { label: strings.players.progress.physicalLabel, value: data.averages?.physical },
+        { label: strings.players.progress.attitudeLabel, value: data.averages?.attitude },
       ]
     : [];
 
@@ -47,7 +48,7 @@ export default function PlayerProgressPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-              {data ? data.player.name : 'Progreso del Jugador'}
+              {data ? data.player.name : strings.players.progress.defaultTitle}
             </h1>
             {data?.player?.team && (
               <p className="text-sm text-gray-500 mt-0.5">
@@ -60,12 +61,12 @@ export default function PlayerProgressPage() {
               onClick={() => navigate(`/players/${playerId}/evaluations/new`)}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-md text-sm transition-colors"
             >
-              Nueva evaluación
+              {strings.players.progress.newEvaluation}
             </button>
           )}
         </div>
 
-        {loading && <p className="text-sm text-gray-400">Cargando...</p>}
+        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
             {error}
@@ -85,15 +86,15 @@ export default function PlayerProgressPage() {
                 {data.attendanceSummary && data.attendanceSummary.totalSessions > 0 && (
                   <div className="sm:ml-auto flex gap-4 text-center">
                     <div>
-                      <p className="text-xs text-gray-400">Sesiones</p>
+                      <p className="text-xs text-gray-400">{strings.players.progress.sessionsLabel}</p>
                       <p className="text-lg font-bold text-gray-800">{data.attendanceSummary.totalSessions}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-green-500">Asistió</p>
+                      <p className="text-xs text-green-500">{strings.players.progress.attendedLabel}</p>
                       <p className="text-lg font-bold text-green-700">{data.attendanceSummary.attended}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-red-400">Faltó</p>
+                      <p className="text-xs text-red-400">{strings.players.progress.missedLabel}</p>
                       <p className="text-lg font-bold text-red-600">{data.attendanceSummary.missed}</p>
                     </div>
                   </div>
@@ -114,10 +115,10 @@ export default function PlayerProgressPage() {
               )}
             </div>
 
-            <h3 className="font-semibold text-gray-800 mb-3">Historial de evaluaciones</h3>
+            <h3 className="font-semibold text-gray-800 mb-3">{strings.players.progress.historyHeading}</h3>
 
             {(!data.evaluations || data.evaluations.length === 0) && (
-              <p className="text-sm text-gray-400">Sin evaluaciones registradas.</p>
+              <p className="text-sm text-gray-400">{strings.players.progress.noEvaluations}</p>
             )}
 
             <div className="space-y-3">
@@ -134,14 +135,14 @@ export default function PlayerProgressPage() {
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                     {[
-                      { label: 'Técnico', value: ev.technicalScore },
-                      { label: 'Táctico', value: ev.tacticalScore },
-                      { label: 'Físico', value: ev.physicalScore },
-                      { label: 'Actitud', value: ev.attitudeScore },
+                      { label: strings.players.progress.technicalLabel, value: ev.technicalScore },
+                      { label: strings.players.progress.tacticalLabel, value: ev.tacticalScore },
+                      { label: strings.players.progress.physicalLabel, value: ev.physicalScore },
+                      { label: strings.players.progress.attitudeLabel, value: ev.attitudeScore },
                     ].map(({ label, value }) => (
                       <div key={label} className="bg-gray-50 rounded-md p-2">
                         <span className="text-gray-400 text-xs block">{label}</span>
-                        <span className="font-semibold text-gray-800">{value}/10</span>
+                        <span className="font-semibold text-gray-800">{value}{strings.common.scoreSuffix}</span>
                       </div>
                     ))}
                   </div>

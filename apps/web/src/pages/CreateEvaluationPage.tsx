@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { evaluationsApi } from '../api/evaluations.api';
 import { playersApi } from '../api/players.api';
 import type { CreateEvaluationRequest } from '../types/evaluation';
+import { strings } from '../lib/strings';
 
 function ScoreSlider({
   label,
@@ -80,7 +81,7 @@ export default function CreateEvaluationPage() {
       setSuccess(true);
       setTimeout(() => navigate(`/players/${playerId}/progress`), 1500);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Error al registrar evaluación');
+      setError(err?.response?.data?.message ?? strings.evaluations.errorSave);
     } finally {
       setLoading(false);
     }
@@ -93,16 +94,16 @@ export default function CreateEvaluationPage() {
           onClick={() => navigate(-1)}
           className="text-gray-400 hover:text-gray-600 transition-colors text-sm mb-4"
         >
-          ← Volver
+          {strings.common.back}
         </button>
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Nueva Evaluación</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{strings.evaluations.createTitle}</h1>
         {playerName && (
           <p className="text-sm font-medium text-indigo-600 mb-6">{playerName}</p>
         )}
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
-            Evaluación guardada. Redirigiendo al progreso...
+            {strings.evaluations.successSave}
           </div>
         )}
         {error && (
@@ -116,36 +117,36 @@ export default function CreateEvaluationPage() {
           className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 space-y-5"
         >
           <ScoreSlider
-            label="Puntaje Técnico"
+            label={strings.evaluations.technicalLabel}
             value={form.technicalScore}
             onChange={(v) => setScore('technicalScore', v)}
           />
           <ScoreSlider
-            label="Puntaje Táctico"
+            label={strings.evaluations.tacticalLabel}
             value={form.tacticalScore}
             onChange={(v) => setScore('tacticalScore', v)}
           />
           <ScoreSlider
-            label="Puntaje Físico"
+            label={strings.evaluations.physicalLabel}
             value={form.physicalScore}
             onChange={(v) => setScore('physicalScore', v)}
           />
           <ScoreSlider
-            label="Puntaje de Actitud"
+            label={strings.evaluations.attitudeLabel}
             value={form.attitudeScore}
             onChange={(v) => setScore('attitudeScore', v)}
           />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notas (opcional)
+              {strings.evaluations.notesLabel}
             </label>
             <textarea
               value={form.notes}
               onChange={(e) => setScore('notes', e.target.value)}
               rows={3}
               className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-              placeholder="Observaciones del entrenador..."
+              placeholder={strings.evaluations.notesPlaceholder}
             />
           </div>
 
@@ -155,14 +156,14 @@ export default function CreateEvaluationPage() {
               disabled={loading}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Guardando...' : 'Guardar Evaluación'}
+              {loading ? strings.common.saving : strings.evaluations.saveButton}
             </button>
             <button
               type="button"
               onClick={() => navigate(-1)}
               className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
-              Cancelar
+              {strings.common.cancel}
             </button>
           </div>
         </form>

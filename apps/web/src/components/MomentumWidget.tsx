@@ -1,3 +1,5 @@
+import { strings } from "../lib/strings";
+
 interface MomentumWidgetProps {
   evaluatedCount: number;
   total: number;
@@ -18,7 +20,7 @@ export function MomentumWidget({ evaluatedCount, total }: MomentumWidgetProps) {
           className="font-body uppercase text-on-surface-variant"
           style={{ fontSize: "0.6875rem", letterSpacing: "0.05em" }}
         >
-          Momentum de evaluación
+          {strings.dashboard.momentum.label}
         </p>
         <div className="flex gap-1 mt-0.5">
           {[0, 1, 2].map((i) => (
@@ -51,9 +53,7 @@ export function MomentumWidget({ evaluatedCount, total }: MomentumWidgetProps) {
       </div>
 
       <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-        Evaluaciones completadas un{" "}
-        <span className="text-primary font-semibold">{pct}% más activos</span>{" "}
-        esta semana.
+        {strings.dashboard.momentum.description(pct)}
       </p>
     </div>
   );

@@ -1,3 +1,5 @@
+import { strings } from "../lib/strings";
+
 interface TeamCardProps {
   name: string;
   category: string;
@@ -60,7 +62,7 @@ export function TeamCard({ name, category, playerCount, onClick }: TeamCardProps
           </p>
           {playerCount !== undefined && (
             <p className="font-body text-xs text-on-surface-variant mt-1">
-              {playerCount} {playerCount === 1 ? "Jugador" : "Jugadores"}
+              {strings.teams.playerCount(playerCount)}
             </p>
           )}
         </div>

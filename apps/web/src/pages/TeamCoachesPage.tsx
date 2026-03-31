@@ -6,11 +6,7 @@ import { academiesApi } from '../api/academies.api';
 import { useAuth } from '../hooks/useAuth';
 import type { TeamCoach } from '../types/teamCoach';
 import type { AcademyMember } from '../types/academy';
-
-const COACH_ROLE_LABEL: Record<string, string> = {
-  HEAD: 'Entrenador Principal',
-  ASSISTANT: 'Asistente',
-};
+import { strings } from '../lib/strings';
 
 export default function TeamCoachesPage() {
   const { teamId } = useParams();
@@ -31,7 +27,7 @@ export default function TeamCoachesPage() {
       const res = await teamCoachesApi.list(Number(teamId));
       setCoaches(res.data);
     } catch (err: any) {
-      setListError(err?.response?.data?.message ?? 'Error al cargar entrenadores');
+      setListError(err?.response?.data?.message ?? strings.coaches.errorLoad);
     } finally {
       setListLoading(false);
     }
@@ -57,19 +53,19 @@ export default function TeamCoachesPage() {
       setForm({ userId: '', role: 'HEAD' });
       loadCoaches();
     } catch (err: any) {
-      setAddError(err?.response?.data?.message ?? 'Error al agregar entrenador');
+      setAddError(err?.response?.data?.message ?? strings.coaches.errorAdd);
     } finally {
       setAddLoading(false);
     }
   }
 
   async function handleRemove(userId: number) {
-    if (!confirm('¿Eliminar este entrenador del equipo?')) return;
+    if (!confirm(strings.coaches.removeConfirm)) return;
     try {
       await teamCoachesApi.remove(Number(teamId), userId);
       setCoaches((prev) => prev.filter((c) => c.userId !== userId));
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'Error al eliminar');
+      alert(err?.response?.data?.message ?? strings.coaches.errorRemove);
     }
   }
 
@@ -80,17 +76,17 @@ export default function TeamCoachesPage() {
     <Layout>
       <div className="w-full max-w-lg">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
-          Entrenadores del Equipo
+          {strings.coaches.heading}
         </h1>
 
         {/* List */}
         <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
-          <h2 className="font-semibold text-gray-800 mb-4">Entrenadores actuales</h2>
+          <h2 className="font-semibold text-gray-800 mb-4">{strings.coaches.currentSection}</h2>
 
-          {listLoading && <p className="text-sm text-gray-400">Cargando...</p>}
+          {listLoading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
           {listError && <p className="text-sm text-red-600">{listError}</p>}
           {!listLoading && coaches.length === 0 && !listError && (
-            <p className="text-sm text-gray-400">No hay entrenadores asignados.</p>
+            <p className="text-sm text-gray-400">{strings.coaches.empty}</p>
           )}
 
           <ul className="space-y-2">
@@ -101,10 +97,10 @@ export default function TeamCoachesPage() {
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">
-                    {coach.user?.name ?? 'Entrenador'}
+                    {coach.user?.name ?? strings.coaches.coachFallback}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {coach.user?.email ?? ''} · {COACH_ROLE_LABEL[coach.role] ?? coach.role}
+                    {coach.user?.email ?? ''} · {strings.coaches.roleLabels[coach.role] ?? coach.role}
                   </p>
                 </div>
                 {isDirector && (
@@ -112,7 +108,7 @@ export default function TeamCoachesPage() {
                     onClick={() => handleRemove(coach.userId)}
                     className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors shrink-0 py-1 px-2"
                   >
-                    Quitar
+                    {strings.coaches.removeButton}
                   </button>
                 )}
               </li>
@@ -123,7 +119,7 @@ export default function TeamCoachesPage() {
         {/* Add coach (DIRECTOR only) */}
         {isDirector && (
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
-            <h2 className="font-semibold text-gray-800 mb-4">Agregar Entrenador</h2>
+            <h2 className="font-semibold text-gray-800 mb-4">{strings.coaches.addSection}</h2>
 
             {addError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
@@ -134,11 +130,11 @@ export default function TeamCoachesPage() {
             <form onSubmit={handleAdd} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Seleccionar Entrenador
+                  {strings.coaches.selectLabel}
                 </label>
                 {unassigned.length === 0 ? (
                   <p className="text-sm text-gray-400">
-                    No hay entrenadores disponibles para agregar.
+                    {strings.coaches.noAvailable}
                   </p>
                 ) : (
                   <select
@@ -147,7 +143,7 @@ export default function TeamCoachesPage() {
                     onChange={(e) => setForm({ ...form, userId: e.target.value })}
                     className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                   >
-                    <option value="">— Seleccionar entrenador —</option>
+                    <option value="">{strings.coaches.selectPlaceholder}</option>
                     {unassigned.map((m) => (
                       <option key={m.userId} value={m.userId}>
                         {m.name} ({m.email})
@@ -160,7 +156,7 @@ export default function TeamCoachesPage() {
               {unassigned.length > 0 && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{strings.coaches.roleLabel}</label>
                     <select
                       value={form.role}
                       onChange={(e) =>
@@ -168,8 +164,8 @@ export default function TeamCoachesPage() {
                       }
                       className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                     >
-                      <option value="HEAD">Entrenador Principal</option>
-                      <option value="ASSISTANT">Asistente</option>
+                      <option value="HEAD">{strings.coaches.roleLabels['HEAD']}</option>
+                      <option value="ASSISTANT">{strings.coaches.roleLabels['ASSISTANT']}</option>
                     </select>
                   </div>
                   <button
@@ -177,7 +173,7 @@ export default function TeamCoachesPage() {
                     disabled={addLoading || !form.userId}
                     className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
                   >
-                    {addLoading ? 'Agregando...' : 'Agregar'}
+                    {addLoading ? strings.coaches.adding : strings.coaches.addButton}
                   </button>
                 </>
               )}

@@ -4,16 +4,7 @@ import Layout from '../components/Layout';
 import { trainingsApi } from '../api/trainings.api';
 import { teamsApi } from '../api/teams.api';
 import type { Team } from '../types/team';
-
-const DAYS = [
-  { label: 'Lun', value: 'MON' },
-  { label: 'Mar', value: 'TUE' },
-  { label: 'Mié', value: 'WED' },
-  { label: 'Jue', value: 'THU' },
-  { label: 'Vie', value: 'FRI' },
-  { label: 'Sáb', value: 'SAT' },
-  { label: 'Dom', value: 'SUN' },
-];
+import { strings } from '../lib/strings';
 
 export default function CreateTrainingSchedulePage() {
   const navigate = useNavigate();
@@ -40,7 +31,7 @@ export default function CreateTrainingSchedulePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (selectedDays.length === 0) {
-      setError('Selecciona al menos un día de la semana');
+      setError(strings.sessions.schedule.errorNoDays);
       return;
     }
     setError('');
@@ -56,7 +47,7 @@ export default function CreateTrainingSchedulePage() {
       setSuccess(true);
       setTimeout(() => navigate(`/teams/${teamId}/sessions`), 1500);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Error al crear horario');
+      setError(err?.response?.data?.message ?? strings.sessions.schedule.errorCreate);
     } finally {
       setLoading(false);
     }
@@ -69,10 +60,10 @@ export default function CreateTrainingSchedulePage() {
           onClick={() => navigate(`/teams/${teamId}`)}
           className="text-gray-400 hover:text-gray-600 transition-colors text-sm mb-4"
         >
-          ← {team ? team.name : 'Equipo'}
+          ← {team ? team.name : strings.teams.teamFallback}
         </button>
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-          Nuevo Horario de Entrenamiento
+          {strings.sessions.schedule.createTitle}
         </h1>
         {team && (
           <p className="text-sm text-gray-500 mb-6">{team.name} · {team.category}</p>
@@ -80,7 +71,7 @@ export default function CreateTrainingSchedulePage() {
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
-            Horario creado exitosamente. Redirigiendo...
+            {strings.sessions.schedule.successCreate}
           </div>
         )}
         {error && (
@@ -95,10 +86,10 @@ export default function CreateTrainingSchedulePage() {
         >
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Días de la semana *
+              {strings.sessions.schedule.daysLabel}
             </label>
             <div className="flex gap-2 flex-wrap">
-              {DAYS.map((day) => (
+              {strings.sessions.schedule.days.map((day) => (
                 <button
                   key={day.value}
                   type="button"
@@ -116,7 +107,7 @@ export default function CreateTrainingSchedulePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Hora *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{strings.sessions.schedule.timeLabel}</label>
             <input
               type="time"
               required
@@ -128,7 +119,7 @@ export default function CreateTrainingSchedulePage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fecha de inicio *
+              {strings.sessions.schedule.startDateLabel}
             </label>
             <input
               type="date"
@@ -141,7 +132,7 @@ export default function CreateTrainingSchedulePage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fecha de fin *
+              {strings.sessions.schedule.endDateLabel}
             </label>
             <input
               type="date"
@@ -154,14 +145,14 @@ export default function CreateTrainingSchedulePage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Ubicación (opcional)
+              {strings.sessions.schedule.locationLabel}
             </label>
             <input
               type="text"
               value={form.location}
               onChange={(e) => setForm({ ...form, location: e.target.value })}
               className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Ej: Campo norte"
+              placeholder={strings.sessions.schedule.locationPlaceholder}
             />
           </div>
 
@@ -171,14 +162,14 @@ export default function CreateTrainingSchedulePage() {
               disabled={loading}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Creando...' : 'Crear Horario'}
+              {loading ? strings.common.creating : strings.sessions.schedule.createButton}
             </button>
             <button
               type="button"
               onClick={() => navigate(-1)}
               className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
-              Cancelar
+              {strings.common.cancel}
             </button>
           </div>
         </form>

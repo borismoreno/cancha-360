@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/auth.api';
 import type { AcademyMembership } from '../types/auth';
+import { strings } from '../lib/strings';
 
 export default function SelectAcademyPage() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function SelectAcademyPage() {
       localStorage.setItem('token', data.accessToken);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Error al seleccionar academia');
+      setError(err?.response?.data?.message ?? strings.academies.errorSelect);
     } finally {
       setLoading(false);
     }
@@ -27,8 +28,8 @@ export default function SelectAcademyPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-8">
       <div className="bg-white rounded-xl shadow-md w-full max-w-md p-6 sm:p-8">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Selecciona una academia</h1>
-        <p className="text-sm text-gray-500 mb-6">Tienes acceso a múltiples academias.</p>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{strings.academies.selectTitle}</h1>
+        <p className="text-sm text-gray-500 mb-6">{strings.academies.selectDescription}</p>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
@@ -37,7 +38,7 @@ export default function SelectAcademyPage() {
         )}
 
         {memberships.length === 0 && (
-          <p className="text-sm text-gray-400">No hay academias disponibles.</p>
+          <p className="text-sm text-gray-400">{strings.academies.noAcademies}</p>
         )}
 
         <div className="space-y-3">

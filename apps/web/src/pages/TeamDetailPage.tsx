@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
 import { teamsApi } from '../api/teams.api';
 import type { Team } from '../types/team';
+import { strings } from '../lib/strings';
 
 export default function TeamDetailPage() {
   const { teamId } = useParams();
@@ -19,26 +20,26 @@ export default function TeamDetailPage() {
 
   const actions = [
     {
-      label: 'Jugadores',
-      description: 'Ver y agregar jugadores del equipo.',
+      label: strings.teams.detail.players,
+      description: strings.teams.detail.playersDescription,
       to: `/teams/${teamId}/players`,
       show: true,
     },
     {
-      label: 'Entrenadores',
-      description: 'Gestionar entrenadores asignados.',
+      label: strings.teams.detail.coaches,
+      description: strings.teams.detail.coachesDescription,
       to: `/teams/${teamId}/coaches`,
       show: isCoach || isDirector,
     },
     {
-      label: 'Sesiones de Entrenamiento',
-      description: 'Ver sesiones y registrar asistencia.',
+      label: strings.teams.detail.sessions,
+      description: strings.teams.detail.sessionsDescription,
       to: `/teams/${teamId}/sessions`,
       show: isCoach || isDirector,
     },
     {
-      label: 'Nuevo Horario',
-      description: 'Crear un horario de entrenamiento.',
+      label: strings.teams.detail.newSchedule,
+      description: strings.teams.detail.newScheduleDescription,
       to: `/teams/${teamId}/training-schedules/new`,
       show: isCoach || isDirector,
     },
@@ -52,7 +53,7 @@ export default function TeamDetailPage() {
             onClick={() => navigate('/teams')}
             className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
           >
-            ← Equipos
+            {strings.teams.backToTeams}
           </button>
         </div>
 

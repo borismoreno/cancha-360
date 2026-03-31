@@ -3,12 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { trainingsApi } from '../api/trainings.api';
 import type { SessionDetail, SessionPlayer } from '../types/training';
-
-const STATUS_LABEL: Record<string, string> = {
-  SCHEDULED: 'Programada',
-  CANCELLED: 'Cancelada',
-  COMPLETED: 'Completada',
-};
+import { strings } from '../lib/strings';
 
 export default function TrainingSessionPage() {
   const { sessionId } = useParams();
@@ -37,7 +32,7 @@ export default function TrainingSessionPage() {
         });
         setAttendance(initial);
       })
-      .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar sesión'))
+      .catch((err) => setError(err?.response?.data?.message ?? strings.sessions.detail.errorLoading))
       .finally(() => setLoading(false));
   }, [sessionId]);
 
@@ -67,7 +62,7 @@ export default function TrainingSessionPage() {
       setCancelSuccess(true);
       setSession((prev) => prev ? { ...prev, status: 'CANCELLED' } : prev);
     } catch (err: any) {
-      setCancelError(err?.response?.data?.message ?? 'Error al cancelar sesión');
+      setCancelError(err?.response?.data?.message ?? strings.sessions.detail.errorCancel);
     } finally {
       setCancelLoading(false);
     }
@@ -84,13 +79,13 @@ export default function TrainingSessionPage() {
               onClick={() => navigate(`/teams/${session.teamId}/sessions`)}
               className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
             >
-              ← {session.team?.name ?? 'Sesiones'}
+              ← {session.team?.name ?? strings.sessions.detail.sessionsFallback}
             </button>
           </div>
         )}
 
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-          Sesión de Entrenamiento
+          {strings.sessions.detail.title}
         </h1>
         {session && (
           <div className="mb-6">
@@ -110,12 +105,12 @@ export default function TrainingSessionPage() {
               session.status === 'CANCELLED' ? 'bg-red-50 text-red-700' :
               'bg-green-50 text-green-700'
             }`}>
-              {STATUS_LABEL[session.status] ?? session.status}
+              {strings.sessions.status[session.status] ?? session.status}
             </span>
           </div>
         )}
 
-        {loading && <p className="text-sm text-gray-400">Cargando...</p>}
+        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm mb-4">
             {error}
@@ -126,11 +121,11 @@ export default function TrainingSessionPage() {
         {session && !isCancelled && (
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 mb-6">
             <h2 className="font-semibold text-gray-800 mb-4">
-              Asistencia — {session.players.length} jugadores
+              {strings.sessions.detail.attendanceHeading(session.players.length)}
             </h2>
 
             {session.players.length === 0 && (
-              <p className="text-sm text-gray-400">No hay jugadores en este equipo.</p>
+              <p className="text-sm text-gray-400">{strings.sessions.detail.noPlayers}</p>
             )}
 
             <div className="space-y-3">
@@ -159,7 +154,7 @@ export default function TrainingSessionPage() {
                             : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700'
                         }`}
                       >
-                        Presente
+                        {strings.sessions.detail.presentButton}
                       </button>
                       <button
                         onClick={() => handleAttendance(player, 'ABSENT')}
@@ -170,7 +165,7 @@ export default function TrainingSessionPage() {
                             : 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-700'
                         }`}
                       >
-                        Ausente
+                        {strings.sessions.detail.absentButton}
                       </button>
                     </div>
                   </div>
@@ -183,7 +178,7 @@ export default function TrainingSessionPage() {
         {/* Cancel session */}
         {session && !isCancelled && (
           <div className="bg-white border border-red-200 rounded-xl p-4 sm:p-6">
-            <h2 className="font-semibold text-red-700 mb-4">Cancelar Sesión</h2>
+            <h2 className="font-semibold text-red-700 mb-4">{strings.sessions.detail.cancelSection}</h2>
 
             {cancelError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
@@ -194,14 +189,14 @@ export default function TrainingSessionPage() {
             <form onSubmit={handleCancel} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Motivo (opcional)
+                  {strings.sessions.detail.cancelReasonLabel}
                 </label>
                 <input
                   type="text"
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   className="w-full border border-gray-300 rounded-md px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-red-400"
-                  placeholder="Ej: Lluvia, cancha ocupada..."
+                  placeholder={strings.sessions.detail.cancelReasonPlaceholder}
                 />
               </div>
               <button
@@ -209,7 +204,7 @@ export default function TrainingSessionPage() {
                 disabled={cancelLoading}
                 className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
               >
-                {cancelLoading ? 'Cancelando...' : 'Cancelar Sesión'}
+                {cancelLoading ? strings.sessions.detail.cancelling : strings.sessions.detail.cancelButton}
               </button>
             </form>
           </div>
@@ -217,7 +212,7 @@ export default function TrainingSessionPage() {
 
         {isCancelled && session && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-            Esta sesión fue cancelada.
+            {strings.sessions.detail.cancelledMessage}
           </div>
         )}
       </div>

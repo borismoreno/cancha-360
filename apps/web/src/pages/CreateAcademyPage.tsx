@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { academiesApi } from '../api/academies.api';
 import type { CreateAcademyRequest } from '../types/academy';
+import { strings } from '../lib/strings';
 
 const initial: CreateAcademyRequest = {
   name: '',
@@ -13,11 +14,11 @@ const initial: CreateAcademyRequest = {
 };
 
 const fields: { label: string; field: keyof CreateAcademyRequest; type: string }[] = [
-  { label: 'Nombre de la academia', field: 'name', type: 'text' },
-  { label: 'País', field: 'country', type: 'text' },
-  { label: 'Ciudad', field: 'city', type: 'text' },
-  { label: 'Nombre del director', field: 'directorName', type: 'text' },
-  { label: 'Correo del director', field: 'directorEmail', type: 'email' },
+  { label: strings.academies.nameLabel, field: 'name', type: 'text' },
+  { label: strings.academies.countryLabel, field: 'country', type: 'text' },
+  { label: strings.academies.cityLabel, field: 'city', type: 'text' },
+  { label: strings.academies.directorNameLabel, field: 'directorName', type: 'text' },
+  { label: strings.academies.directorEmailLabel, field: 'directorEmail', type: 'email' },
 ];
 
 export default function CreateAcademyPage() {
@@ -36,7 +37,7 @@ export default function CreateAcademyPage() {
       setSuccess(true);
       setTimeout(() => navigate('/dashboard'), 1500);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Error al crear academia');
+      setError(err?.response?.data?.message ?? strings.academies.errorCreate);
     } finally {
       setLoading(false);
     }
@@ -45,11 +46,11 @@ export default function CreateAcademyPage() {
   return (
     <Layout>
       <div className="w-full max-w-lg">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">Crear Academia</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">{strings.academies.createTitle}</h1>
 
         {success && (
           <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-700 text-sm">
-            Academia creada exitosamente. Redirigiendo...
+            {strings.academies.successCreate}
           </div>
         )}
         {error && (
@@ -81,14 +82,14 @@ export default function CreateAcademyPage() {
               disabled={loading}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Creando...' : 'Crear Academia'}
+              {loading ? strings.common.creating : strings.academies.createButton}
             </button>
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
               className="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-5 rounded-md text-sm transition-colors"
             >
-              Cancelar
+              {strings.common.cancel}
             </button>
           </div>
         </form>

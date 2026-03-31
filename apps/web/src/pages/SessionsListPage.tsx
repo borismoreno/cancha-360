@@ -5,12 +5,7 @@ import { trainingsApi } from '../api/trainings.api';
 import { teamsApi } from '../api/teams.api';
 import type { TrainingSession } from '../types/training';
 import type { Team } from '../types/team';
-
-const STATUS_LABEL: Record<string, string> = {
-  SCHEDULED: 'Programada',
-  CANCELLED: 'Cancelada',
-  COMPLETED: 'Completada',
-};
+import { strings } from '../lib/strings';
 
 const STATUS_COLOR: Record<string, string> = {
   SCHEDULED: 'bg-blue-50 text-blue-700',
@@ -36,7 +31,7 @@ export default function SessionsListPage() {
         setSessions(sessionsRes.data);
         setTeam(teamRes.data);
       })
-      .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar sesiones'))
+      .catch((err) => setError(err?.response?.data?.message ?? strings.sessions.errorLoading))
       .finally(() => setLoading(false));
   }, [teamId]);
 
@@ -48,13 +43,13 @@ export default function SessionsListPage() {
             onClick={() => navigate(`/teams/${teamId}`)}
             className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
           >
-            ← {team ? team.name : 'Equipo'}
+            ← {team ? team.name : strings.teams.teamFallback}
           </button>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Sesiones de Entrenamiento</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">{strings.sessions.heading}</h1>
             {team && (
               <p className="text-sm text-gray-500 mt-0.5">{team.name} · {team.category}</p>
             )}
@@ -63,11 +58,11 @@ export default function SessionsListPage() {
             onClick={() => navigate(`/teams/${teamId}/training-schedules/new`)}
             className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
           >
-            + Nuevo Horario
+            {strings.sessions.newScheduleButton}
           </button>
         </div>
 
-        {loading && <p className="text-sm text-gray-400">Cargando...</p>}
+        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
             {error}
@@ -76,12 +71,12 @@ export default function SessionsListPage() {
 
         {!loading && sessions.length === 0 && !error && (
           <div className="text-center py-16 text-gray-400">
-            <p className="text-sm">No hay sesiones programadas.</p>
+            <p className="text-sm">{strings.sessions.empty}</p>
             <button
               onClick={() => navigate(`/teams/${teamId}/training-schedules/new`)}
               className="mt-4 text-indigo-600 text-sm hover:underline"
             >
-              Crear un horario de entrenamiento
+              {strings.sessions.createScheduleLink}
             </button>
           </div>
         )}
@@ -106,7 +101,7 @@ export default function SessionsListPage() {
                     <span
                       className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLOR[session.status] ?? 'bg-gray-100 text-gray-600'}`}
                     >
-                      {STATUS_LABEL[session.status] ?? session.status}
+                      {strings.sessions.status[session.status] ?? session.status}
                     </span>
                     {session.cancelReason && (
                       <span className="text-xs text-gray-400 italic">{session.cancelReason}</span>
@@ -118,7 +113,7 @@ export default function SessionsListPage() {
                     onClick={() => navigate(`/training-sessions/${session.id}`)}
                     className="w-full sm:w-auto text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md text-sm transition-colors"
                   >
-                    Gestionar
+                    {strings.sessions.manageButton}
                   </button>
                 )}
               </div>

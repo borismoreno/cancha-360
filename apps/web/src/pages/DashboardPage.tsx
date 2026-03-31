@@ -8,23 +8,13 @@ import { MainCTA } from "../components/MainCTA";
 import { MomentumWidget } from "../components/MomentumWidget";
 import { useAuth } from "../hooks/useAuth";
 import { teamsApi } from "../api/teams.api";
+import { strings } from "../lib/strings";
 import { playersApi } from "../api/players.api";
 import type { Team } from "../types/team";
 import type { Player, Evaluation } from "../types/player";
 
-const ROLE_LABEL: Record<string, string> = {
-  SUPER_ADMIN: "Admin",
-  DIRECTOR: "Director",
-  COACH: "Coach",
-  PARENT: "",
-};
-
-const SCORE_LABEL: Record<string, string> = {
-  technicalScore: "Técnica individual",
-  tacticalScore: "Táctica en campo",
-  physicalScore: "Nivel de resistencia",
-  attitudeScore: "Actitud en campo",
-};
+const ROLE_LABEL = strings.roles.greetingName;
+const SCORE_LABEL = strings.scoreLabels;
 
 interface PlayerRow {
   player: Player;
@@ -34,25 +24,36 @@ interface PlayerRow {
 
 function computeSignal(evaluations: Evaluation[]): ActivitySignal {
   if (evaluations.length === 0) {
-    return { description: "Sin evaluaciones aún", color: "gray" };
+    return {
+      description: strings.dashboard.activity.noEvaluations,
+      color: "gray",
+    };
   }
   if (evaluations.length === 1) {
-    return { description: "Evaluado recientemente", color: "blue" };
+    return {
+      description: strings.dashboard.activity.recentlyEvaluated,
+      color: "blue",
+    };
   }
 
   const last = evaluations[evaluations.length - 1];
   const prev = evaluations[evaluations.length - 2];
 
   const deltas = (
-    ["technicalScore", "tacticalScore", "physicalScore", "attitudeScore"] as const
+    [
+      "technicalScore",
+      "tacticalScore",
+      "physicalScore",
+      "attitudeScore",
+    ] as const
   ).map((key) => ({ label: SCORE_LABEL[key], delta: last[key] - prev[key] }));
 
   const biggest = deltas.reduce((a, b) =>
-    Math.abs(a.delta) >= Math.abs(b.delta) ? a : b
+    Math.abs(a.delta) >= Math.abs(b.delta) ? a : b,
   );
 
   if (biggest.delta === 0) {
-    return { description: "Sin cambios recientes", color: "gray" };
+    return { description: strings.dashboard.activity.noChanges, color: "gray" };
   }
 
   const sign = biggest.delta > 0 ? "+" : "";
@@ -115,7 +116,12 @@ function ActionButton({
         fill="none"
         stroke="currentColor"
       >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 5l7 7-7 7"
+        />
       </svg>
     </button>
   );
@@ -146,7 +152,9 @@ export default function DashboardPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [playerRows, setPlayerRows] = useState<PlayerRow[]>([]);
   const [totalPlayers, setTotalPlayers] = useState(0);
-  const [teamPlayerCounts, setTeamPlayerCounts] = useState<Map<number, number>>(new Map());
+  const [teamPlayerCounts, setTeamPlayerCounts] = useState<Map<number, number>>(
+    new Map(),
+  );
   const [totalEvaluations, setTotalEvaluations] = useState(0);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [loadingActivity, setLoadingActivity] = useState(true);
@@ -154,10 +162,9 @@ export default function DashboardPage() {
   const primaryRole = Array.isArray(user?.role) ? user?.role[0] : user?.role;
 
   // Greeting
-  const hour = new Date().getHours();
-  const greetingTime =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const greetingName = primaryRole ? (ROLE_LABEL[primaryRole] ?? primaryRole) : "";
+  const greetingName = primaryRole
+    ? (ROLE_LABEL[primaryRole] ?? primaryRole)
+    : "";
 
   useEffect(() => {
     const promises: Promise<unknown>[] = [];
@@ -171,7 +178,7 @@ export default function DashboardPage() {
             setTeams(teamList);
 
             const playerResults = await Promise.allSettled(
-              teamList.map((t) => playersApi.list(t.id))
+              teamList.map((t) => playersApi.list(t.id)),
             );
 
             const allPlayers: Player[] = [];
@@ -192,7 +199,7 @@ export default function DashboardPage() {
             // Fetch progress for up to 6 players
             const sample = allPlayers.slice(0, 6);
             const progressResults = await Promise.allSettled(
-              sample.map((p) => playersApi.getProgress(p.id))
+              sample.map((p) => playersApi.getProgress(p.id)),
             );
 
             const rows: PlayerRow[] = [];
@@ -211,7 +218,10 @@ export default function DashboardPage() {
               } else {
                 rows.push({
                   player: sample[i],
-                  signal: { description: "Evaluado recientemente", color: "blue" },
+                  signal: {
+                    description: strings.dashboard.activity.recentlyEvaluated,
+                    color: "blue",
+                  },
                   evaluationCount: 0,
                 });
               }
@@ -221,7 +231,7 @@ export default function DashboardPage() {
             setTotalEvaluations(evalTotal);
           })
           .catch(() => setLoadingMetrics(false))
-          .finally(() => setLoadingActivity(false))
+          .finally(() => setLoadingActivity(false)),
       );
     } else {
       setLoadingMetrics(false);
@@ -236,19 +246,19 @@ export default function DashboardPage() {
 
   const adminActions = [
     {
-      label: "Crear equipo",
+      label: strings.dashboard.actions.createTeam,
       icon: <PlusCircleIcon />,
       to: "/teams/new",
       show: isDirector || isCoach,
     },
     {
-      label: "Invitar usuario",
+      label: strings.dashboard.actions.inviteUser,
       icon: <PersonPlusIcon />,
       to: "/invite",
       show: isDirector,
     },
     {
-      label: "Crear Academia",
+      label: strings.dashboard.actions.createAcademy,
       icon: <PlusCircleIcon />,
       to: "/admin/academies/new",
       show: primaryRole === "SUPER_ADMIN",
@@ -268,11 +278,10 @@ export default function DashboardPage() {
             <div className="md:hidden">
               <h1
                 className="font-display font-bold text-white leading-tight"
-                style={{ fontSize: "2rem" }}
+                style={{ fontSize: "1.5rem" }}
               >
-                {greetingTime},{" "}
+                {strings.dashboard.greeting.academy}
                 <br />
-                {greetingName}
               </h1>
             </div>
           )}
@@ -283,27 +292,44 @@ export default function DashboardPage() {
               {loadingMetrics ? (
                 <>
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="bg-surface-high animate-pulse rounded-3xl h-24 md:h-32" />
+                    <div
+                      key={i}
+                      className="bg-surface-high animate-pulse rounded-3xl h-24 md:h-32"
+                    />
                   ))}
                 </>
               ) : (
                 <>
                   <MetricCard
-                    label="ACTIVE TEAMS"
+                    label={strings.dashboard.metrics.activeTeams}
                     value={teams.length}
-                    sub={teams.length > 0 ? `${teams.length} activos` : undefined}
+                    sub={
+                      teams.length > 0
+                        ? strings.dashboard.metrics.activeTeamsSub(teams.length)
+                        : undefined
+                    }
                     icon={<IconGroups />}
                   />
                   <MetricCard
-                    label="TOTAL PLAYERS"
+                    label={strings.dashboard.metrics.totalPlayers}
                     value={totalPlayers}
-                    sub={evaluatedCount > 0 ? `Elite status: ${evaluatedCount}` : undefined}
+                    sub={
+                      evaluatedCount > 0
+                        ? strings.dashboard.metrics.totalPlayersSub(
+                            evaluatedCount,
+                          )
+                        : undefined
+                    }
                     icon={<IconPerson />}
                   />
                   <MetricCard
-                    label="EVALUATIONS"
+                    label={strings.dashboard.metrics.evaluations}
                     value={totalEvaluations}
-                    sub={pendingCount > 0 ? `Pending: ${pendingCount}` : undefined}
+                    sub={
+                      pendingCount > 0
+                        ? strings.dashboard.metrics.evaluationsSub(pendingCount)
+                        : undefined
+                    }
                     icon={<IconChart />}
                   />
                 </>
@@ -314,8 +340,8 @@ export default function DashboardPage() {
           {/* ── CTA banner ── */}
           {isStaff && (
             <MainCTA
-              title="Ver cómo están mejorando tus jugadores"
-              subtitle="Accede al panel de rendimiento avanzado y analiza la evolución táctica de cada atleta."
+              title={strings.dashboard.cta.title}
+              subtitle={strings.dashboard.cta.subtitle}
               onClick={() => navigate("/teams")}
             />
           )}
@@ -324,8 +350,11 @@ export default function DashboardPage() {
           {isStaff && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-display font-bold text-white" style={{ fontSize: "1.1rem" }}>
-                  Actividad Reciente
+                <h2
+                  className="font-display font-bold text-white"
+                  style={{ fontSize: "1.1rem" }}
+                >
+                  {strings.dashboard.activity.heading}
                 </h2>
                 {!loadingActivity && playerRows.length > 0 && (
                   <button
@@ -333,7 +362,7 @@ export default function DashboardPage() {
                     className="font-body text-xs font-semibold uppercase text-primary hover:opacity-80 transition-opacity"
                     style={{ letterSpacing: "0.05em" }}
                   >
-                    Ver historial
+                    {strings.dashboard.activity.viewHistory}
                   </button>
                 )}
               </div>
@@ -341,22 +370,25 @@ export default function DashboardPage() {
               {loadingActivity ? (
                 <div className="space-y-2">
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="bg-surface-high animate-pulse rounded-2xl h-16" />
+                    <div
+                      key={i}
+                      className="bg-surface-high animate-pulse rounded-2xl h-16"
+                    />
                   ))}
                 </div>
               ) : playerRows.length === 0 ? (
                 <div className="bg-surface-high rounded-3xl p-8 text-center">
                   <p className="font-display text-sm font-medium text-white">
-                    Aún no has registrado evaluaciones.
+                    {strings.dashboard.activity.emptyTitle}
                   </p>
                   <p className="font-body text-xs text-on-surface-variant mt-1">
-                    Empieza a evaluar a tus jugadores para ver su progreso aquí.
+                    {strings.dashboard.activity.emptyDescription}
                   </p>
                   <button
                     onClick={() => navigate("/teams")}
                     className="mt-4 font-body text-sm text-primary hover:opacity-80 transition-opacity font-medium"
                   >
-                    Ir a mis equipos →
+                    {strings.dashboard.activity.goToTeams}
                   </button>
                 </div>
               ) : (
@@ -375,7 +407,7 @@ export default function DashboardPage() {
                       onClick={() => navigate("/teams")}
                       className="w-full font-body text-sm text-on-surface-variant hover:text-primary transition-colors py-2 text-center"
                     >
-                      Ver los {totalPlayers} jugadores →
+                      {strings.dashboard.activity.viewAllPlayers(totalPlayers)}
                     </button>
                   )}
                 </div>
@@ -408,7 +440,7 @@ export default function DashboardPage() {
 
           {/* ── Admin actions (mobile only) ── */}
           {adminActions.length > 0 && (
-            <div className="md:hidden space-y-2">
+            <div className="space-y-2">
               {adminActions.map((action) => (
                 <ActionButton
                   key={action.to}
@@ -424,7 +456,7 @@ export default function DashboardPage() {
           {!isStaff && primaryRole !== "SUPER_ADMIN" && (
             <div className="text-center py-16">
               <p className="font-body text-sm text-on-surface-variant">
-                Bienvenido. Tu entrenador compartirá el progreso de tu jugador aquí.
+                {strings.dashboard.parent.welcome}
               </p>
             </div>
           )}
@@ -440,7 +472,7 @@ export default function DashboardPage() {
                   className="font-display font-bold text-white mb-3"
                   style={{ fontSize: "1.1rem" }}
                 >
-                  Mis equipos
+                  {strings.dashboard.teams.heading}
                 </h2>
                 <div className="space-y-3">
                   {teams.slice(0, 2).map((team) => (

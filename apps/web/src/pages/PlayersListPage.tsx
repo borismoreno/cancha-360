@@ -6,6 +6,7 @@ import { teamsApi } from '../api/teams.api';
 import { useAuth } from '../hooks/useAuth';
 import type { Player } from '../types/player';
 import type { Team } from '../types/team';
+import { strings } from '../lib/strings';
 
 export default function PlayersListPage() {
   const { teamId } = useParams();
@@ -26,7 +27,7 @@ export default function PlayersListPage() {
         setPlayers(playersRes.data);
         setTeam(teamRes.data);
       })
-      .catch((err) => setError(err?.response?.data?.message ?? 'Error al cargar jugadores'))
+      .catch((err) => setError(err?.response?.data?.message ?? strings.players.errorLoading))
       .finally(() => setLoading(false));
   }, [teamId]);
 
@@ -38,13 +39,13 @@ export default function PlayersListPage() {
             onClick={() => navigate(`/teams/${teamId}`)}
             className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
           >
-            ← {team ? team.name : 'Equipo'}
+            ← {team ? team.name : strings.teams.teamFallback}
           </button>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Jugadores</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">{strings.players.heading}</h1>
             {team && (
               <p className="text-sm text-gray-500 mt-0.5">{team.name} · {team.category}</p>
             )}
@@ -54,12 +55,12 @@ export default function PlayersListPage() {
               onClick={() => navigate(`/teams/${teamId}/players/new`)}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors"
             >
-              + Agregar Jugador
+              {strings.players.addButton}
             </button>
           )}
         </div>
 
-        {loading && <p className="text-sm text-gray-400">Cargando...</p>}
+        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
             {error}
@@ -68,13 +69,13 @@ export default function PlayersListPage() {
 
         {!loading && players.length === 0 && !error && (
           <div className="text-center py-16 text-gray-400">
-            <p className="text-sm">No hay jugadores registrados.</p>
+            <p className="text-sm">{strings.players.empty}</p>
             {(isCoach || isDirector) && (
               <button
                 onClick={() => navigate(`/teams/${teamId}/players/new`)}
                 className="mt-4 text-indigo-600 text-sm hover:underline"
               >
-                Agregar el primer jugador
+                {strings.players.addFirst}
               </button>
             )}
           </div>
@@ -90,7 +91,7 @@ export default function PlayersListPage() {
                 <div>
                   <p className="font-medium text-gray-800">{player.name}</p>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    {player.position ?? 'Sin posición definida'}
+                    {player.position ?? strings.players.noPosition}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -98,14 +99,14 @@ export default function PlayersListPage() {
                     onClick={() => navigate(`/players/${player.id}/progress`)}
                     className="flex-1 sm:flex-none text-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium py-2 px-3 rounded-md text-sm transition-colors"
                   >
-                    Progreso
+                    {strings.players.progressButton}
                   </button>
                   {(isCoach || isDirector) && (
                     <button
                       onClick={() => navigate(`/players/${player.id}/evaluations/new`)}
                       className="flex-1 sm:flex-none text-center bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-3 rounded-md text-sm transition-colors"
                     >
-                      Evaluar
+                      {strings.players.evaluateButton}
                     </button>
                   )}
                 </div>

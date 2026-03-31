@@ -1,3 +1,5 @@
+import { strings } from "../lib/strings";
+
 interface MainCTAProps {
   title: string;
   subtitle: string;
@@ -57,7 +59,7 @@ export function MainCTA({ title, subtitle, onClick }: MainCTAProps) {
           className="mt-5 px-5 py-2.5 rounded-full font-display font-semibold text-sm text-primary hover:opacity-90 transition-opacity"
           style={{ backgroundColor: "#425900" }}
         >
-          Ver rendimiento
+          {strings.dashboard.cta.button}
         </button>
       </div>
     </div>
