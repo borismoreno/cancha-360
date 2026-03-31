@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
+import PublicRoute from '../components/PublicRoute';
 
 import LoginPage from '../pages/LoginPage';
 import SelectAcademyPage from '../pages/SelectAcademyPage';
@@ -24,8 +25,8 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         {/* Public */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/select-academy" element={<SelectAcademyPage />} />
+        <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+        <Route path="/select-academy" element={<PublicRoute><SelectAcademyPage /></PublicRoute>} />
         <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
 
         {/* Protected — any authenticated user */}

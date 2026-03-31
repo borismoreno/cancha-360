@@ -1,30 +1,38 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '../components/Layout';
-import { trainingsApi } from '../api/trainings.api';
-import { teamsApi } from '../api/teams.api';
-import type { Team } from '../types/team';
-import { strings } from '../lib/strings';
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Layout from "../components/Layout";
+import { trainingsApi } from "../api/trainings.api";
+import { teamsApi } from "../api/teams.api";
+import type { Team } from "../types/team";
+import { strings } from "../lib/strings";
 
 export default function CreateTrainingSchedulePage() {
   const navigate = useNavigate();
   const { teamId } = useParams();
   const [team, setTeam] = useState<Team | null>(null);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [form, setForm] = useState({ time: '', startDate: '', endDate: '', location: '' });
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({
+    time: "",
+    startDate: "",
+    endDate: "",
+    location: "",
+  });
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (teamId) {
-      teamsApi.getOne(Number(teamId)).then((res) => setTeam(res.data)).catch(() => {});
+      teamsApi
+        .getOne(Number(teamId))
+        .then((res) => setTeam(res.data))
+        .catch(() => {});
     }
   }, [teamId]);
 
   function toggleDay(day: string) {
     setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
     );
   }
 
@@ -34,7 +42,7 @@ export default function CreateTrainingSchedulePage() {
       setError(strings.sessions.schedule.errorNoDays);
       return;
     }
-    setError('');
+    setError("");
     setLoading(true);
     try {
       await trainingsApi.createSchedule(Number(teamId), {
@@ -47,7 +55,9 @@ export default function CreateTrainingSchedulePage() {
       setSuccess(true);
       setTimeout(() => navigate(`/teams/${teamId}/sessions`), 1500);
     } catch (err: any) {
-      setError(err?.response?.data?.message ?? strings.sessions.schedule.errorCreate);
+      setError(
+        err?.response?.data?.message ?? strings.sessions.schedule.errorCreate,
+      );
     } finally {
       setLoading(false);
     }
@@ -66,7 +76,9 @@ export default function CreateTrainingSchedulePage() {
           {strings.sessions.schedule.createTitle}
         </h1>
         {team && (
-          <p className="text-sm text-gray-500 mb-6">{team.name} · {team.category}</p>
+          <p className="text-sm text-gray-500 mb-6">
+            {team.name} · {team.category}
+          </p>
         )}
 
         {success && (
@@ -94,10 +106,10 @@ export default function CreateTrainingSchedulePage() {
                   key={day.value}
                   type="button"
                   onClick={() => toggleDay(day.value)}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors min-w-[44px] ${
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors min-w-11 ${
                     selectedDays.includes(day.value)
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? "bg-indigo-600 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
                   {day.label}
@@ -107,7 +119,9 @@ export default function CreateTrainingSchedulePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{strings.sessions.schedule.timeLabel}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {strings.sessions.schedule.timeLabel}
+            </label>
             <input
               type="time"
               required
@@ -162,7 +176,9 @@ export default function CreateTrainingSchedulePage() {
               disabled={loading}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? strings.common.creating : strings.sessions.schedule.createButton}
+              {loading
+                ? strings.common.creating
+                : strings.sessions.schedule.createButton}
             </button>
             <button
               type="button"

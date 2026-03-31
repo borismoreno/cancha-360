@@ -146,7 +146,7 @@ function PersonPlusIcon() {
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { user, isDirector, isCoach } = useAuth();
+  const { user, isDirector, isCoach, logout } = useAuth();
   const navigate = useNavigate();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -460,6 +460,17 @@ export default function DashboardPage() {
               </p>
             </div>
           )}
+
+          {/* Logout — testing only */}
+          <div className="pt-4 pb-2 flex justify-center">
+            <button
+              onClick={logout}
+              className="font-body text-xs font-semibold uppercase text-on-surface-variant hover:text-primary transition-colors"
+              style={{ letterSpacing: "0.05em" }}
+            >
+              {strings.nav.logout}
+            </button>
+          </div>
         </div>
 
         {/* ── Right panel (desktop only) ── */}
