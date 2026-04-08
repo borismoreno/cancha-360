@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { academiesApi } from '../api/academies.api';
 import type { CreateAcademyRequest } from '../types/academy';
@@ -24,23 +25,21 @@ const fields: { label: string; field: keyof CreateAcademyRequest; type: string }
 export default function CreateAcademyPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initial);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await academiesApi.create(form);
+  const { mutate: createAcademy, isPending, error } = useMutation({
+    mutationFn: () => academiesApi.create(form),
+    onSuccess: () => {
       setSuccess(true);
       setTimeout(() => navigate('/dashboard'), 1500);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? strings.academies.errorCreate);
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const errorMsg = error ? ((error as any)?.response?.data?.message ?? strings.academies.errorCreate) : '';
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    createAcademy();
   }
 
   return (
@@ -53,9 +52,9 @@ export default function CreateAcademyPage() {
             {strings.academies.successCreate}
           </div>
         )}
-        {error && (
+        {errorMsg && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 
@@ -79,10 +78,10 @@ export default function CreateAcademyPage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? strings.common.creating : strings.academies.createButton}
+              {isPending ? strings.common.creating : strings.academies.createButton}
             </button>
             <button
               type="button"

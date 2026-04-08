@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Layout from "../components/Layout";
 import { trainingsApi } from "../api/trainings.api";
 import { teamsApi } from "../api/teams.api";
-import type { Team } from "../types/team";
 import { strings } from "../lib/strings";
 
 export default function CreateTrainingSchedulePage() {
   const navigate = useNavigate();
   const { teamId } = useParams();
-  const [team, setTeam] = useState<Team | null>(null);
+  const queryClient = useQueryClient();
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [form, setForm] = useState({
     time: "",
@@ -17,18 +17,32 @@ export default function CreateTrainingSchedulePage() {
     endDate: "",
     location: "",
   });
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [daysError, setDaysError] = useState("");
 
-  useEffect(() => {
-    if (teamId) {
-      teamsApi
-        .getOne(Number(teamId))
-        .then((res) => setTeam(res.data))
-        .catch(() => {});
-    }
-  }, [teamId]);
+  const { data: team } = useQuery({
+    queryKey: ['team', Number(teamId)],
+    queryFn: () => teamsApi.getOne(Number(teamId)).then((r) => r.data),
+    enabled: !!teamId,
+  });
+
+  const { mutate: createSchedule, isPending, error } = useMutation({
+    mutationFn: () =>
+      trainingsApi.createSchedule(Number(teamId), {
+        daysOfWeek: selectedDays,
+        time: form.time,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        location: form.location || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sessions', Number(teamId)] });
+      setSuccess(true);
+      setTimeout(() => navigate(`/teams/${teamId}/sessions`), 1500);
+    },
+  });
+
+  const errorMsg = error ? ((error as any)?.response?.data?.message ?? strings.sessions.schedule.errorCreate) : daysError;
 
   function toggleDay(day: string) {
     setSelectedDays((prev) =>
@@ -36,31 +50,14 @@ export default function CreateTrainingSchedulePage() {
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (selectedDays.length === 0) {
-      setError(strings.sessions.schedule.errorNoDays);
+      setDaysError(strings.sessions.schedule.errorNoDays);
       return;
     }
-    setError("");
-    setLoading(true);
-    try {
-      await trainingsApi.createSchedule(Number(teamId), {
-        daysOfWeek: selectedDays,
-        time: form.time,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        location: form.location || undefined,
-      });
-      setSuccess(true);
-      setTimeout(() => navigate(`/teams/${teamId}/sessions`), 1500);
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message ?? strings.sessions.schedule.errorCreate,
-      );
-    } finally {
-      setLoading(false);
-    }
+    setDaysError("");
+    createSchedule();
   }
 
   return (
@@ -86,9 +83,9 @@ export default function CreateTrainingSchedulePage() {
             {strings.sessions.schedule.successCreate}
           </div>
         )}
-        {error && (
+        {errorMsg && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 
@@ -173,12 +170,10 @@ export default function CreateTrainingSchedulePage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading
-                ? strings.common.creating
-                : strings.sessions.schedule.createButton}
+              {isPending ? strings.common.creating : strings.sessions.schedule.createButton}
             </button>
             <button
               type="button"

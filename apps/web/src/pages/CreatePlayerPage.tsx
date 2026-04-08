@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { playersApi } from '../api/players.api';
 import { teamsApi } from '../api/teams.api';
-import type { Team } from '../types/team';
 import { strings } from '../lib/strings';
 
 export default function CreatePlayerPage() {
   const navigate = useNavigate();
   const { teamId } = useParams();
-  const [team, setTeam] = useState<Team | null>(null);
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({
     name: '',
     birthdate: '',
@@ -17,35 +17,35 @@ export default function CreatePlayerPage() {
     parentName: '',
     parentEmail: '',
   });
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (teamId) {
-      teamsApi.getOne(Number(teamId)).then((res) => setTeam(res.data)).catch(() => {});
-    }
-  }, [teamId]);
+  const { data: team } = useQuery({
+    queryKey: ['team', Number(teamId)],
+    queryFn: () => teamsApi.getOne(Number(teamId)).then((r) => r.data),
+    enabled: !!teamId,
+  });
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await playersApi.create(Number(teamId), {
+  const { mutate: createPlayer, isPending, error } = useMutation({
+    mutationFn: () =>
+      playersApi.create(Number(teamId), {
         name: form.name,
         birthdate: form.birthdate,
         position: form.position || undefined,
         parentName: form.parentName || undefined,
         parentEmail: form.parentEmail || undefined,
-      });
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['players', Number(teamId)] });
       setSuccess(true);
       setTimeout(() => navigate(`/teams/${teamId}/players`), 1500);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? strings.players.errorCreate);
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const errorMsg = error ? ((error as any)?.response?.data?.message ?? strings.players.errorCreate) : '';
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    createPlayer();
   }
 
   return (
@@ -67,9 +67,9 @@ export default function CreatePlayerPage() {
             {strings.players.successCreate}
           </div>
         )}
-        {error && (
+        {errorMsg && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 
@@ -144,10 +144,10 @@ export default function CreatePlayerPage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? strings.common.saving : strings.players.addPlayerButton}
+              {isPending ? strings.common.saving : strings.players.addPlayerButton}
             </button>
             <button
               type="button"

@@ -1,74 +1,70 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { trainingsApi } from '../api/trainings.api';
-import type { SessionDetail, SessionPlayer } from '../types/training';
+import type { SessionPlayer } from '../types/training';
 import { strings } from '../lib/strings';
 
 export default function TrainingSessionPage() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
-
-  const [session, setSession] = useState<SessionDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
 
   const [savingPlayer, setSavingPlayer] = useState<number | null>(null);
   const [attendance, setAttendance] = useState<Record<number, 'PRESENT' | 'ABSENT'>>({});
-
   const [cancelReason, setCancelReason] = useState('');
-  const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
-  const [cancelError, setCancelError] = useState('');
 
-  useEffect(() => {
-    trainingsApi
-      .getSession(Number(sessionId))
-      .then((res) => {
-        setSession(res.data);
-        const initial: Record<number, 'PRESENT' | 'ABSENT'> = {};
-        res.data.players.forEach((p) => {
-          if (p.attendanceStatus) initial[p.id] = p.attendanceStatus;
-        });
-        setAttendance(initial);
-      })
-      .catch((err) => setError(err?.response?.data?.message ?? strings.sessions.detail.errorLoading))
-      .finally(() => setLoading(false));
-  }, [sessionId]);
-
-  async function handleAttendance(player: SessionPlayer, status: 'PRESENT' | 'ABSENT') {
-    setSavingPlayer(player.id);
-    try {
-      await trainingsApi.recordAttendance(Number(sessionId), {
-        playerId: player.id,
-        status,
+  const { data: session, isLoading, isError, error } = useQuery({
+    queryKey: ['session', Number(sessionId)],
+    queryFn: () => trainingsApi.getSession(Number(sessionId)).then((r) => r.data),
+    enabled: !!sessionId,
+    select: (data) => {
+      const initial: Record<number, 'PRESENT' | 'ABSENT'> = {};
+      data.players.forEach((p) => {
+        if (p.attendanceStatus) initial[p.id] = p.attendanceStatus;
       });
-      setAttendance((prev) => ({ ...prev, [player.id]: status }));
-    } catch (err: any) {
+      setAttendance((prev) => Object.keys(prev).length === 0 ? initial : prev);
+      return data;
+    },
+  });
+
+  const { mutate: recordAttendance } = useMutation({
+    mutationFn: ({ playerId, status }: { playerId: number; status: 'PRESENT' | 'ABSENT' }) =>
+      trainingsApi.recordAttendance(Number(sessionId), { playerId, status }),
+    onMutate: ({ playerId }) => setSavingPlayer(playerId),
+    onSuccess: (_, { playerId, status }) => {
+      setAttendance((prev) => ({ ...prev, [playerId]: status }));
+    },
+    onError: (err: any) => {
       alert(err?.response?.data?.message ?? 'Error al registrar asistencia');
-    } finally {
-      setSavingPlayer(null);
-    }
-  }
+    },
+    onSettled: () => setSavingPlayer(null),
+  });
 
-  async function handleCancel(e: React.FormEvent) {
-    e.preventDefault();
-    setCancelError('');
-    setCancelLoading(true);
-    try {
-      await trainingsApi.cancelSession(Number(sessionId), {
-        reason: cancelReason || undefined,
-      });
+  const { mutate: cancelSession, isPending: cancelLoading, error: cancelError } = useMutation({
+    mutationFn: () => trainingsApi.cancelSession(Number(sessionId), { reason: cancelReason || undefined }),
+    onSuccess: () => {
+      queryClient.setQueryData(['session', Number(sessionId)], (old: any) =>
+        old ? { ...old, status: 'CANCELLED' } : old,
+      );
       setCancelSuccess(true);
-      setSession((prev) => prev ? { ...prev, status: 'CANCELLED' } : prev);
-    } catch (err: any) {
-      setCancelError(err?.response?.data?.message ?? strings.sessions.detail.errorCancel);
-    } finally {
-      setCancelLoading(false);
-    }
+    },
+  });
+
+  const cancelErrorMsg = cancelError ? ((cancelError as any)?.response?.data?.message ?? strings.sessions.detail.errorCancel) : '';
+  const errorMsg = isError ? ((error as any)?.response?.data?.message ?? strings.sessions.detail.errorLoading) : '';
+  const isCancelled = session?.status === 'CANCELLED' || cancelSuccess;
+
+  function handleAttendance(player: SessionPlayer, status: 'PRESENT' | 'ABSENT') {
+    recordAttendance({ playerId: player.id, status });
   }
 
-  const isCancelled = session?.status === 'CANCELLED' || cancelSuccess;
+  function handleCancel(e: React.FormEvent) {
+    e.preventDefault();
+    cancelSession();
+  }
 
   return (
     <Layout>
@@ -110,10 +106,10 @@ export default function TrainingSessionPage() {
           </div>
         )}
 
-        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
-        {error && (
+        {isLoading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
+        {errorMsg && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm mb-4">
-            {error}
+            {errorMsg}
           </div>
         )}
 
@@ -180,9 +176,9 @@ export default function TrainingSessionPage() {
           <div className="bg-white border border-red-200 rounded-xl p-4 sm:p-6">
             <h2 className="font-semibold text-red-700 mb-4">{strings.sessions.detail.cancelSection}</h2>
 
-            {cancelError && (
+            {cancelErrorMsg && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-                {cancelError}
+                {cancelErrorMsg}
               </div>
             )}
 

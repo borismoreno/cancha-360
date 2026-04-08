@@ -1,22 +1,20 @@
-import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { useAuth } from '../hooks/useAuth';
 import { teamsApi } from '../api/teams.api';
-import type { Team } from '../types/team';
 import { strings } from '../lib/strings';
 
 export default function TeamDetailPage() {
   const { teamId } = useParams();
   const navigate = useNavigate();
   const { isCoach, isDirector } = useAuth();
-  const [team, setTeam] = useState<Team | null>(null);
 
-  useEffect(() => {
-    if (teamId) {
-      teamsApi.getOne(Number(teamId)).then((res) => setTeam(res.data)).catch(() => {});
-    }
-  }, [teamId]);
+  const { data: team } = useQuery({
+    queryKey: ['team', Number(teamId)],
+    queryFn: () => teamsApi.getOne(Number(teamId)).then((r) => r.data),
+    enabled: !!teamId,
+  });
 
   const actions = [
     {

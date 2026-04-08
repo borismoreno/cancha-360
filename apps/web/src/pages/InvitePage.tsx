@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { invitationsApi } from '../api/invitations.api';
 import { strings } from '../lib/strings';
@@ -9,23 +10,21 @@ const ROLES = ['DIRECTOR', 'COACH', 'PARENT'];
 export default function InvitePage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', role: 'COACH' });
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await invitationsApi.create(form);
+  const { mutate: sendInvite, isPending, error } = useMutation({
+    mutationFn: () => invitationsApi.create(form),
+    onSuccess: () => {
       setSuccess(true);
       setForm({ email: '', role: 'COACH' });
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? strings.invitations.errorSend);
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const errorMsg = error ? ((error as any)?.response?.data?.message ?? strings.invitations.errorSend) : '';
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    sendInvite();
   }
 
   return (
@@ -38,9 +37,9 @@ export default function InvitePage() {
             {strings.invitations.successSend}
           </div>
         )}
-        {error && (
+        {errorMsg && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 
@@ -81,10 +80,10 @@ export default function InvitePage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? strings.common.sending : strings.invitations.sendButton}
+              {isPending ? strings.common.sending : strings.invitations.sendButton}
             </button>
             <button
               type="button"

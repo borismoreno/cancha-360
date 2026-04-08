@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { trainingsApi } from '../api/trainings.api';
 import { teamsApi } from '../api/teams.api';
-import type { TrainingSession } from '../types/training';
-import type { Team } from '../types/team';
 import { strings } from '../lib/strings';
 
 const STATUS_COLOR: Record<string, string> = {
@@ -16,24 +14,21 @@ const STATUS_COLOR: Record<string, string> = {
 export default function SessionsListPage() {
   const { teamId } = useParams();
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState<TrainingSession[]>([]);
-  const [team, setTeam] = useState<Team | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const id = Number(teamId);
 
-  useEffect(() => {
-    const id = Number(teamId);
-    Promise.all([
-      trainingsApi.listSessions(id),
-      teamsApi.getOne(id),
-    ])
-      .then(([sessionsRes, teamRes]) => {
-        setSessions(sessionsRes.data);
-        setTeam(teamRes.data);
-      })
-      .catch((err) => setError(err?.response?.data?.message ?? strings.sessions.errorLoading))
-      .finally(() => setLoading(false));
-  }, [teamId]);
+  const { data: team } = useQuery({
+    queryKey: ['team', id],
+    queryFn: () => teamsApi.getOne(id).then((r) => r.data),
+    enabled: !!teamId,
+  });
+
+  const { data: sessions = [], isLoading, isError, error } = useQuery({
+    queryKey: ['sessions', id],
+    queryFn: () => trainingsApi.listSessions(id).then((r) => r.data),
+    enabled: !!teamId,
+  });
+
+  const errorMsg = isError ? ((error as any)?.response?.data?.message ?? strings.sessions.errorLoading) : '';
 
   return (
     <Layout>
@@ -62,14 +57,14 @@ export default function SessionsListPage() {
           </button>
         </div>
 
-        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
-        {error && (
+        {isLoading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
+        {errorMsg && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 
-        {!loading && sessions.length === 0 && !error && (
+        {!isLoading && sessions.length === 0 && !errorMsg && (
           <div className="text-center py-16 text-gray-400">
             <p className="text-sm">{strings.sessions.empty}</p>
             <button

@@ -1,76 +1,67 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { teamCoachesApi } from '../api/teamCoaches.api';
 import { academiesApi } from '../api/academies.api';
 import { useAuth } from '../hooks/useAuth';
-import type { TeamCoach } from '../types/teamCoach';
-import type { AcademyMember } from '../types/academy';
 import { strings } from '../lib/strings';
 
 export default function TeamCoachesPage() {
   const { teamId } = useParams();
   const { isDirector } = useAuth();
-
-  const [coaches, setCoaches] = useState<TeamCoach[]>([]);
-  const [availableCoaches, setAvailableCoaches] = useState<AcademyMember[]>([]);
-  const [listLoading, setListLoading] = useState(true);
-  const [listError, setListError] = useState('');
+  const queryClient = useQueryClient();
+  const id = Number(teamId);
 
   const [form, setForm] = useState({ userId: '', role: 'HEAD' as 'HEAD' | 'ASSISTANT' });
-  const [addLoading, setAddLoading] = useState(false);
-  const [addError, setAddError] = useState('');
 
-  async function loadCoaches() {
-    setListLoading(true);
-    try {
-      const res = await teamCoachesApi.list(Number(teamId));
-      setCoaches(res.data);
-    } catch (err: any) {
-      setListError(err?.response?.data?.message ?? strings.coaches.errorLoad);
-    } finally {
-      setListLoading(false);
-    }
-  }
+  const { data: coaches = [], isLoading: listLoading, isError: listError, error: listErrorObj } = useQuery({
+    queryKey: ['coaches', id],
+    queryFn: () => teamCoachesApi.list(id).then((r) => r.data),
+    enabled: !!teamId,
+  });
 
-  useEffect(() => {
-    loadCoaches();
-    if (isDirector) {
-      academiesApi.getMembers('COACH').then((res) => setAvailableCoaches(res.data)).catch(() => {});
-    }
-  }, [teamId, isDirector]);
+  const { data: availableCoaches = [] } = useQuery({
+    queryKey: ['academy-members', 'COACH'],
+    queryFn: () => academiesApi.getMembers('COACH').then((r) => r.data),
+    enabled: isDirector,
+  });
 
-  async function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.userId) return;
-    setAddError('');
-    setAddLoading(true);
-    try {
-      await teamCoachesApi.add(Number(teamId), {
-        userId: Number(form.userId),
-        role: form.role,
-      });
+  const { mutate: addCoach, isPending: addLoading, error: addErrorObj } = useMutation({
+    mutationFn: () =>
+      teamCoachesApi.add(id, { userId: Number(form.userId), role: form.role }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['coaches', id] });
       setForm({ userId: '', role: 'HEAD' });
-      loadCoaches();
-    } catch (err: any) {
-      setAddError(err?.response?.data?.message ?? strings.coaches.errorAdd);
-    } finally {
-      setAddLoading(false);
-    }
-  }
+    },
+  });
 
-  async function handleRemove(userId: number) {
-    if (!confirm(strings.coaches.removeConfirm)) return;
-    try {
-      await teamCoachesApi.remove(Number(teamId), userId);
-      setCoaches((prev) => prev.filter((c) => c.userId !== userId));
-    } catch (err: any) {
+  const { mutate: removeCoach } = useMutation({
+    mutationFn: (userId: number) => teamCoachesApi.remove(id, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['coaches', id] });
+    },
+    onError: (err: any) => {
       alert(err?.response?.data?.message ?? strings.coaches.errorRemove);
-    }
-  }
+    },
+  });
+
+  const listErrorMsg = listError ? ((listErrorObj as any)?.response?.data?.message ?? strings.coaches.errorLoad) : '';
+  const addErrorMsg = addErrorObj ? ((addErrorObj as any)?.response?.data?.message ?? strings.coaches.errorAdd) : '';
 
   const assignedIds = new Set(coaches.map((c) => c.userId));
   const unassigned = availableCoaches.filter((m) => !assignedIds.has(m.userId));
+
+  function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.userId) return;
+    addCoach();
+  }
+
+  function handleRemove(userId: number) {
+    if (!confirm(strings.coaches.removeConfirm)) return;
+    removeCoach(userId);
+  }
 
   return (
     <Layout>
@@ -84,8 +75,8 @@ export default function TeamCoachesPage() {
           <h2 className="font-semibold text-gray-800 mb-4">{strings.coaches.currentSection}</h2>
 
           {listLoading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
-          {listError && <p className="text-sm text-red-600">{listError}</p>}
-          {!listLoading && coaches.length === 0 && !listError && (
+          {listErrorMsg && <p className="text-sm text-red-600">{listErrorMsg}</p>}
+          {!listLoading && coaches.length === 0 && !listErrorMsg && (
             <p className="text-sm text-gray-400">{strings.coaches.empty}</p>
           )}
 
@@ -121,9 +112,9 @@ export default function TeamCoachesPage() {
           <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6">
             <h2 className="font-semibold text-gray-800 mb-4">{strings.coaches.addSection}</h2>
 
-            {addError && (
+            {addErrorMsg && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-                {addError}
+                {addErrorMsg}
               </div>
             )}
 

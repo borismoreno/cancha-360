@@ -1,25 +1,20 @@
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { teamsApi } from '../api/teams.api';
 import { useAuth } from '../hooks/useAuth';
-import type { Team } from '../types/team';
 import { strings } from '../lib/strings';
 
 export default function TeamsPage() {
   const navigate = useNavigate();
   const { isDirector, isCoach } = useAuth();
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  useEffect(() => {
-    teamsApi
-      .list()
-      .then((res) => setTeams(res.data))
-      .catch((err) => setError(err?.response?.data?.message ?? strings.teams.errorLoading))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: teams = [], isLoading, isError, error } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teamsApi.list().then((r) => r.data),
+  });
+
+  const errorMsg = isError ? ((error as any)?.response?.data?.message ?? strings.teams.errorLoading) : '';
 
   return (
     <Layout>
@@ -36,14 +31,14 @@ export default function TeamsPage() {
           )}
         </div>
 
-        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
-        {error && (
+        {isLoading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
+        {errorMsg && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 
-        {!loading && teams.length === 0 && !error && (
+        {!isLoading && teams.length === 0 && !errorMsg && (
           <div className="text-center py-16 text-gray-400">
             <p className="text-sm">{strings.teams.empty}</p>
             {(isDirector || isCoach) && (

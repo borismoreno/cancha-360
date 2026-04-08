@@ -1,26 +1,22 @@
-import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { playersApi } from '../api/players.api';
 import { useAuth } from '../hooks/useAuth';
-import type { PlayerProgress } from '../types/player';
 import { strings } from '../lib/strings';
 
 export default function PlayerProgressPage() {
   const { playerId } = useParams();
   const navigate = useNavigate();
   const { isCoach, isDirector } = useAuth();
-  const [data, setData] = useState<PlayerProgress | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    playersApi
-      .getProgress(Number(playerId))
-      .then((res) => setData(res.data))
-      .catch((err) => setError(err?.response?.data?.message ?? strings.players.progress.errorLoading))
-      .finally(() => setLoading(false));
-  }, [playerId]);
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['player-progress', Number(playerId)],
+    queryFn: () => playersApi.getProgress(Number(playerId)).then((r) => r.data),
+    enabled: !!playerId,
+  });
+
+  const errorMsg = isError ? ((error as any)?.response?.data?.message ?? strings.players.progress.errorLoading) : '';
 
   const scoreCards = data
     ? [
@@ -66,10 +62,10 @@ export default function PlayerProgressPage() {
           )}
         </div>
 
-        {loading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
-        {error && (
+        {isLoading && <p className="text-sm text-gray-400">{strings.common.loading}</p>}
+        {errorMsg && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 

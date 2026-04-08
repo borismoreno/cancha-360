@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Layout from '../components/Layout';
 import { evaluationsApi } from '../api/evaluations.api';
 import { playersApi } from '../api/players.api';
@@ -48,43 +49,41 @@ const initial: CreateEvaluationRequest = {
 export default function CreateEvaluationPage() {
   const navigate = useNavigate();
   const { playerId } = useParams();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState(initial);
-  const [playerName, setPlayerName] = useState('');
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (playerId) {
-      playersApi.getProgress(Number(playerId)).then((res) => {
-        setPlayerName(res.data.player.name);
-      }).catch(() => {});
-    }
-  }, [playerId]);
+  const { data: progress } = useQuery({
+    queryKey: ['player-progress', Number(playerId)],
+    queryFn: () => playersApi.getProgress(Number(playerId)).then((r) => r.data),
+    enabled: !!playerId,
+  });
 
-  function setScore(field: keyof CreateEvaluationRequest, value: number | string) {
-    setForm((f) => ({ ...f, [field]: value }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await evaluationsApi.create(Number(playerId), {
+  const { mutate: createEvaluation, isPending, error } = useMutation({
+    mutationFn: () =>
+      evaluationsApi.create(Number(playerId), {
         technicalScore: form.technicalScore,
         tacticalScore: form.tacticalScore,
         physicalScore: form.physicalScore,
         attitudeScore: form.attitudeScore,
         notes: form.notes || undefined,
-      });
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['player-progress', Number(playerId)] });
       setSuccess(true);
       setTimeout(() => navigate(`/players/${playerId}/progress`), 1500);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? strings.evaluations.errorSave);
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const errorMsg = error ? ((error as any)?.response?.data?.message ?? strings.evaluations.errorSave) : '';
+
+  function setScore(field: keyof CreateEvaluationRequest, value: number | string) {
+    setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    createEvaluation();
   }
 
   return (
@@ -97,8 +96,8 @@ export default function CreateEvaluationPage() {
           {strings.common.back}
         </button>
         <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">{strings.evaluations.createTitle}</h1>
-        {playerName && (
-          <p className="text-sm font-medium text-indigo-600 mb-6">{playerName}</p>
+        {progress?.player?.name && (
+          <p className="text-sm font-medium text-indigo-600 mb-6">{progress.player.name}</p>
         )}
 
         {success && (
@@ -106,9 +105,9 @@ export default function CreateEvaluationPage() {
             {strings.evaluations.successSave}
           </div>
         )}
-        {error && (
+        {errorMsg && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 
@@ -153,10 +152,10 @@ export default function CreateEvaluationPage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? strings.common.saving : strings.evaluations.saveButton}
+              {isPending ? strings.common.saving : strings.evaluations.saveButton}
             </button>
             <button
               type="button"

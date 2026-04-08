@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueries } from "@tanstack/react-query";
 import Layout from "../components/Layout";
 import { MetricCard } from "../components/MetricCard";
 import { ActivityItem, type ActivitySignal } from "../components/ActivityItem";
@@ -10,7 +10,6 @@ import { useAuth } from "../hooks/useAuth";
 import { teamsApi } from "../api/teams.api";
 import { strings } from "../lib/strings";
 import { playersApi } from "../api/players.api";
-import type { Team } from "../types/team";
 import type { Player, Evaluation } from "../types/player";
 
 const ROLE_LABEL = strings.roles.greetingName;
@@ -149,98 +148,57 @@ export default function DashboardPage() {
   const { user, isDirector, isCoach, logout } = useAuth();
   const navigate = useNavigate();
 
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [playerRows, setPlayerRows] = useState<PlayerRow[]>([]);
-  const [totalPlayers, setTotalPlayers] = useState(0);
-  const [teamPlayerCounts, setTeamPlayerCounts] = useState<Map<number, number>>(
-    new Map(),
-  );
-  const [totalEvaluations, setTotalEvaluations] = useState(0);
-  const [loadingMetrics, setLoadingMetrics] = useState(true);
-  const [loadingActivity, setLoadingActivity] = useState(true);
-
   const primaryRole = Array.isArray(user?.role) ? user?.role[0] : user?.role;
+  const greetingName = primaryRole ? (ROLE_LABEL[primaryRole] ?? primaryRole) : "";
+  const isStaff = isDirector || isCoach;
 
-  // Greeting
-  const greetingName = primaryRole
-    ? (ROLE_LABEL[primaryRole] ?? primaryRole)
-    : "";
+  // 1. Teams
+  const { data: teams = [], isLoading: teamsLoading } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teamsApi.list().then((r) => r.data),
+    enabled: isStaff,
+  });
 
-  useEffect(() => {
-    const promises: Promise<unknown>[] = [];
+  // 2. Players per team
+  const playerQueries = useQueries({
+    queries: teams.map((team) => ({
+      queryKey: ['players', team.id] as const,
+      queryFn: () => playersApi.list(team.id).then((r) => r.data),
+    })),
+  });
 
-    if (isDirector || isCoach) {
-      promises.push(
-        teamsApi
-          .list()
-          .then(async (res) => {
-            const teamList = res.data ?? [];
-            setTeams(teamList);
+  const playersLoading = playerQueries.some((q) => q.isLoading);
+  const allPlayers = playerQueries.flatMap((q) => q.data ?? []);
+  const teamPlayerCounts = new Map(
+    teams.map((team, i) => [team.id, playerQueries[i]?.data?.length ?? 0]),
+  );
+  const totalPlayers = allPlayers.length;
 
-            const playerResults = await Promise.allSettled(
-              teamList.map((t) => playersApi.list(t.id)),
-            );
+  // 3. Progress for first 6 players
+  const sample = allPlayers.slice(0, 6);
+  const progressQueries = useQueries({
+    queries: sample.map((player) => ({
+      queryKey: ['player-progress', player.id] as const,
+      queryFn: () => playersApi.getProgress(player.id).then((r) => r.data),
+    })),
+  });
 
-            const allPlayers: Player[] = [];
-            const counts = new Map<number, number>();
+  const progressLoading = progressQueries.some((q) => q.isLoading);
 
-            playerResults.forEach((r, i) => {
-              if (r.status === "fulfilled") {
-                const teamId = teamList[i].id;
-                counts.set(teamId, r.value.data.length);
-                allPlayers.push(...r.value.data);
-              }
-            });
+  const loadingMetrics = teamsLoading || playersLoading;
+  const loadingActivity = playersLoading || progressLoading;
 
-            setTotalPlayers(allPlayers.length);
-            setTeamPlayerCounts(counts);
-            setLoadingMetrics(false);
+  const playerRows: PlayerRow[] = sample.map((player, i) => {
+    const progress = progressQueries[i]?.data;
+    const evals = progress?.evaluations ?? [];
+    return {
+      player,
+      signal: computeSignal(evals),
+      evaluationCount: evals.length,
+    };
+  });
 
-            // Fetch progress for up to 6 players
-            const sample = allPlayers.slice(0, 6);
-            const progressResults = await Promise.allSettled(
-              sample.map((p) => playersApi.getProgress(p.id)),
-            );
-
-            const rows: PlayerRow[] = [];
-            let evalTotal = 0;
-
-            progressResults.forEach((r, i) => {
-              if (r.status === "fulfilled") {
-                const evals = r.value.data.evaluations ?? [];
-                const count = evals.length;
-                evalTotal += count;
-                rows.push({
-                  player: sample[i],
-                  signal: computeSignal(evals),
-                  evaluationCount: count,
-                });
-              } else {
-                rows.push({
-                  player: sample[i],
-                  signal: {
-                    description: strings.dashboard.activity.recentlyEvaluated,
-                    color: "blue",
-                  },
-                  evaluationCount: 0,
-                });
-              }
-            });
-
-            setPlayerRows(rows);
-            setTotalEvaluations(evalTotal);
-          })
-          .catch(() => setLoadingMetrics(false))
-          .finally(() => setLoadingActivity(false)),
-      );
-    } else {
-      setLoadingMetrics(false);
-      setLoadingActivity(false);
-    }
-
-    Promise.allSettled(promises);
-  }, [user?.academyId, isDirector, isCoach]);
-
+  const totalEvaluations = playerRows.reduce((sum, r) => sum + r.evaluationCount, 0);
   const evaluatedCount = playerRows.filter((r) => r.evaluationCount > 0).length;
   const pendingCount = Math.max(0, playerRows.length - evaluatedCount);
 
@@ -264,8 +222,6 @@ export default function DashboardPage() {
       show: primaryRole === "SUPER_ADMIN",
     },
   ].filter((a) => a.show);
-
-  const isStaff = isDirector || isCoach;
 
   return (
     <Layout>
@@ -315,9 +271,7 @@ export default function DashboardPage() {
                     value={totalPlayers}
                     sub={
                       evaluatedCount > 0
-                        ? strings.dashboard.metrics.totalPlayersSub(
-                            evaluatedCount,
-                          )
+                        ? strings.dashboard.metrics.totalPlayersSub(evaluatedCount)
                         : undefined
                     }
                     icon={<IconPerson />}
@@ -393,7 +347,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {playerRows.map(({ player, signal, evaluationCount: _ }) => (
+                  {playerRows.map(({ player, signal }) => (
                     <ActivityItem
                       key={player.id}
                       name={player.name}

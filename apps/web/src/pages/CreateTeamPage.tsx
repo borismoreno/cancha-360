@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Layout from "../components/Layout";
 import { teamsApi } from "../api/teams.api";
 import { useAuth } from "../hooks/useAuth";
@@ -7,30 +8,28 @@ import { useAuth } from "../hooks/useAuth";
 export default function CreateTeamPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({ name: "", category: "" });
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    const academyId = user?.academyId;
-    if (!academyId) {
-      setError("No se encontró la academia.");
-      setLoading(false);
-      return;
-    }
-    try {
-      await teamsApi.create(academyId, form);
+  const { mutate: createTeam, isPending, error } = useMutation({
+    mutationFn: () => {
+      const academyId = user?.academyId;
+      if (!academyId) throw new Error("No se encontró la academia.");
+      return teamsApi.create(academyId, form);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
       setSuccess(true);
       setTimeout(() => navigate("/teams"), 1500);
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? "Error al crear equipo");
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const errorMsg = error ? ((error as any)?.response?.data?.message ?? (error as any)?.message ?? "Error al crear equipo") : '';
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    createTeam();
   }
 
   return (
@@ -49,9 +48,9 @@ export default function CreateTeamPage() {
             Equipo creado exitosamente. Redirigiendo...
           </div>
         )}
-        {error && (
+        {errorMsg && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
-            {error}
+            {errorMsg}
           </div>
         )}
 
@@ -90,10 +89,10 @@ export default function CreateTeamPage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-md text-sm disabled:opacity-50 transition-colors"
             >
-              {loading ? "Creando..." : "Crear Equipo"}
+              {isPending ? "Creando..." : "Crear Equipo"}
             </button>
             <button
               type="button"
