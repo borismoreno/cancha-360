@@ -1,9 +1,9 @@
-import { useMemo } from "react";
-import type { JwtUser } from "../types/auth";
+import type { JwtUser } from '../types/auth';
+import { useAuthStore } from '../store/auth.store';
 
-function parseJwt(token: string): JwtUser | null {
+export function parseJwt(token: string): JwtUser | null {
   try {
-    const payload = token.split(".")[1];
+    const payload = token.split('.')[1];
     return JSON.parse(atob(payload)) as JwtUser;
   } catch {
     return null;
@@ -11,21 +11,13 @@ function parseJwt(token: string): JwtUser | null {
 }
 
 export function useAuth() {
-  const user = useMemo(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return null;
-    return parseJwt(token);
-  }, []);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
-  const isAuthenticated = !!user && user.type !== "TEMP_AUTH";
-  const isSuperAdmin = user?.role?.includes("SUPER_ADMIN") || false;
-  const isDirector = user?.role?.includes("DIRECTOR") || false;
-  const isCoach = user?.role?.includes("COACH") || false;
-
-  function logout() {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-  }
+  const isAuthenticated = !!user && user.type !== 'TEMP_AUTH';
+  const isSuperAdmin = user?.role?.includes('SUPER_ADMIN') || false;
+  const isDirector = user?.role?.includes('DIRECTOR') || false;
+  const isCoach = user?.role?.includes('COACH') || false;
 
   return { user, isAuthenticated, isSuperAdmin, isDirector, isCoach, logout };
 }

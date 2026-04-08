@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/auth.api";
+import { academiesApi } from "../api/academies.api";
+import { parseJwt } from "../hooks/useAuth";
+import { useAuthStore } from "../store/auth.store";
 import { strings } from "../lib/strings";
 
 export default function LoginPage() {
@@ -28,6 +31,15 @@ export default function LoginPage() {
 
       if (data.accessToken) {
         localStorage.setItem("token", data.accessToken);
+        const user = parseJwt(data.accessToken);
+        let academy = null;
+        if (user?.academyId) {
+          try {
+            const res = await academiesApi.getCurrent();
+            academy = res.data;
+          } catch {}
+        }
+        useAuthStore.getState().setSession(user, academy, data.accessToken);
         navigate("/dashboard");
       }
     } catch (err: any) {

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/auth.api';
+import { academiesApi } from '../api/academies.api';
+import { parseJwt } from '../hooks/useAuth';
+import { useAuthStore } from '../store/auth.store';
 import type { AcademyMembership } from '../types/auth';
 import { strings } from '../lib/strings';
 
@@ -17,6 +20,15 @@ export default function SelectAcademyPage() {
     try {
       const { data } = await authApi.selectAcademy({ academyId });
       localStorage.setItem('token', data.accessToken);
+      const user = parseJwt(data.accessToken);
+      let academy = null;
+      if (user?.academyId) {
+        try {
+          const res = await academiesApi.getCurrent();
+          academy = res.data;
+        } catch {}
+      }
+      useAuthStore.getState().setSession(user, academy, data.accessToken);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err?.response?.data?.message ?? strings.academies.errorSelect);

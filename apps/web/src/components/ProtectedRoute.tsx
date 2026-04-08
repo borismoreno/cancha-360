@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useAuthStore } from "../store/auth.store";
 
 interface Props {
   children: React.ReactNode;
@@ -8,6 +9,9 @@ interface Props {
 
 export default function ProtectedRoute({ children, roles }: Props) {
   const { user, isAuthenticated } = useAuth();
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+
+  if (!hasHydrated) return null;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

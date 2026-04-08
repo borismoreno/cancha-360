@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { academiesApi } from "../api/academies.api";
+import { useAuthStore } from "../store/auth.store";
 import { strings } from "../lib/strings";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -116,16 +115,8 @@ const NAV_ITEMS: NavEntry[] = [
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [academyName, setAcademyName] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user?.academyId) {
-      academiesApi
-        .getCurrent()
-        .then((res) => setAcademyName(res.data?.name ?? null))
-        .catch(() => {});
-    }
-  }, [user?.academyId]);
+  const academy = useAuthStore((state) => state.academy);
+  const academyName = academy?.name ?? null;
 
   const primaryRole = Array.isArray(user?.role) ? user?.role[0] : user?.role;
   const roleLabel = primaryRole
