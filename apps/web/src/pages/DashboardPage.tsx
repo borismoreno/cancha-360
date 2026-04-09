@@ -149,12 +149,14 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   const primaryRole = Array.isArray(user?.role) ? user?.role[0] : user?.role;
-  const greetingName = primaryRole ? (ROLE_LABEL[primaryRole] ?? primaryRole) : "";
+  const greetingName = primaryRole
+    ? (ROLE_LABEL[primaryRole] ?? primaryRole)
+    : "";
   const isStaff = isDirector || isCoach;
 
   // 1. Teams
   const { data: teams = [], isLoading: teamsLoading } = useQuery({
-    queryKey: ['teams'],
+    queryKey: ["teams"],
     queryFn: () => teamsApi.list().then((r) => r.data),
     enabled: isStaff,
   });
@@ -162,7 +164,7 @@ export default function DashboardPage() {
   // 2. Players per team
   const playerQueries = useQueries({
     queries: teams.map((team) => ({
-      queryKey: ['players', team.id] as const,
+      queryKey: ["players", team.id] as const,
       queryFn: () => playersApi.list(team.id).then((r) => r.data),
     })),
   });
@@ -178,7 +180,7 @@ export default function DashboardPage() {
   const sample = allPlayers.slice(0, 6);
   const progressQueries = useQueries({
     queries: sample.map((player) => ({
-      queryKey: ['player-progress', player.id] as const,
+      queryKey: ["player-progress", player.id] as const,
       queryFn: () => playersApi.getProgress(player.id).then((r) => r.data),
     })),
   });
@@ -198,7 +200,10 @@ export default function DashboardPage() {
     };
   });
 
-  const totalEvaluations = playerRows.reduce((sum, r) => sum + r.evaluationCount, 0);
+  const totalEvaluations = playerRows.reduce(
+    (sum, r) => sum + r.evaluationCount,
+    0,
+  );
   const evaluatedCount = playerRows.filter((r) => r.evaluationCount > 0).length;
   const pendingCount = Math.max(0, playerRows.length - evaluatedCount);
 
@@ -271,7 +276,9 @@ export default function DashboardPage() {
                     value={totalPlayers}
                     sub={
                       evaluatedCount > 0
-                        ? strings.dashboard.metrics.totalPlayersSub(evaluatedCount)
+                        ? strings.dashboard.metrics.totalPlayersSub(
+                            evaluatedCount,
+                          )
                         : undefined
                     }
                     icon={<IconPerson />}
@@ -353,7 +360,7 @@ export default function DashboardPage() {
                       name={player.name}
                       position={player.position}
                       signal={signal}
-                      onClick={() => navigate(`/players/${player.id}/progress`)}
+                      onClick={() => navigate(`/players/${player.id}`)}
                     />
                   ))}
                   {totalPlayers > 6 && (
@@ -394,7 +401,7 @@ export default function DashboardPage() {
 
           {/* ── Admin actions (mobile only) ── */}
           {adminActions.length > 0 && (
-            <div className="space-y-2">
+            <div className="md:hidden space-y-2">
               {adminActions.map((action) => (
                 <ActionButton
                   key={action.to}
@@ -416,7 +423,7 @@ export default function DashboardPage() {
           )}
 
           {/* Logout — testing only */}
-          <div className="pt-4 pb-2 flex justify-center">
+          <div className="md:hidden pt-4 pb-2 flex justify-center">
             <button
               onClick={logout}
               className="font-body text-xs font-semibold uppercase text-on-surface-variant hover:text-primary transition-colors"

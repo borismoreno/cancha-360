@@ -92,6 +92,7 @@ export default function LoginPage() {
               type="email"
               required
               value={email}
+              autoComplete="off"
               onChange={(e) => setEmail(e.target.value)}
               className={`w-full bg-surface-low text-white text-sm py-3.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary placeholder:text-outline-variant ${compact ? "px-4" : "pl-10 pr-4"}`}
               placeholder={strings.auth.emailUserPlaceholder}
@@ -106,12 +107,12 @@ export default function LoginPage() {
             <label className="text-on-surface-variant text-xs tracking-widest uppercase">
               {strings.auth.passwordLabel}
             </label>
-            <button
-              type="button"
+            <a
+              href="/forgot-password"
               className="text-primary text-xs tracking-wider hover:opacity-80 transition-opacity"
             >
               {strings.auth.forgotPassword}
-            </button>
+            </a>
           </div>
           <div className="relative">
             {!compact && (
@@ -251,7 +252,7 @@ export default function LoginPage() {
           <p className="text-center mt-6 text-on-surface-variant text-xs">
             {strings.auth.newToAcademy}{" "}
             <a
-              href="/accept-invitation"
+              href="/request-access"
               className="text-primary font-semibold hover:opacity-80 transition-opacity"
             >
               {strings.auth.requestAccess}
@@ -260,33 +261,6 @@ export default function LoginPage() {
 
           {/* Quick Access */}
         </div>
-
-        {/* Mobile footer */}
-        {/* <div className="px-6 pb-6 pt-2 text-center">
-          <div className="flex justify-center gap-5 mb-2">
-            <button
-              type="button"
-              className="text-outline-variant text-xs tracking-wider hover:text-on-surface-variant transition-colors"
-            >
-              {strings.auth.footerPrivacy}
-            </button>
-            <button
-              type="button"
-              className="text-outline-variant text-xs tracking-wider hover:text-on-surface-variant transition-colors"
-            >
-              {strings.auth.footerTerms}
-            </button>
-            <button
-              type="button"
-              className="text-outline-variant text-xs tracking-wider hover:text-on-surface-variant transition-colors"
-            >
-              {strings.auth.footerSupport}
-            </button>
-          </div>
-          <p className="text-outline-variant text-xs">
-            {strings.auth.footerCopyright}
-          </p>
-        </div> */}
       </div>
 
       {/* ═══════════════════════════════════════════════
@@ -311,26 +285,8 @@ export default function LoginPage() {
             </span>
           </div>
           <div className="flex items-center gap-8">
-            <button
-              type="button"
-              className="text-on-surface-variant text-xs tracking-widest uppercase hover:text-white transition-colors"
-            >
-              {strings.auth.navPrograms}
-            </button>
-            <button
-              type="button"
-              className="text-on-surface-variant text-xs tracking-widest uppercase hover:text-white transition-colors"
-            >
-              {strings.auth.navMethodology}
-            </button>
-            <button
-              type="button"
-              className="text-on-surface-variant text-xs tracking-widest uppercase hover:text-white transition-colors"
-            >
-              {strings.auth.navAthletes}
-            </button>
             <a
-              href="/accept-invitation"
+              href="/request-access"
               className="px-5 py-2 rounded-lg text-xs font-bold tracking-widest uppercase text-[#0e0e0e] hover:opacity-90 transition-opacity"
               style={{
                 background: "linear-gradient(135deg, #bcf521, #00f4fe)",
