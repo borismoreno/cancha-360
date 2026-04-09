@@ -19,6 +19,7 @@ import SessionsListPage from '../pages/SessionsListPage';
 import TrainingSessionPage from '../pages/TrainingSessionPage';
 import TeamCoachesPage from '../pages/TeamCoachesPage';
 import InvitePage from '../pages/InvitePage';
+import PlayerDetailPage from '../pages/PlayerDetailPage';
 
 export default function AppRouter() {
   return (
@@ -35,6 +36,14 @@ export default function AppRouter() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/players/:id"
+          element={
+            <ProtectedRoute>
+              <PlayerDetailPage />
             </ProtectedRoute>
           }
         />

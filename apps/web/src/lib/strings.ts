@@ -286,6 +286,23 @@ export const strings = {
       historyHeading: "Historial de evaluaciones",
       noEvaluations: "Sin evaluaciones registradas.",
     },
+
+    detail: {
+      backLabel: "PLAYER PROFILE",
+      statusLabel: "ESTADO ACTUAL",
+      statusMessage1: "MEJORANDO",
+      statusMessage2: "CONSTANTEMENTE",
+      ovrLabel: "OVR SCORE",
+      attributesHeading: "ANÁLISIS DE ATRIBUTOS",
+      evolutionHeading: "EVOLUCIÓN",
+      evaluationsHeading: "EVALUACIONES RECIENTES",
+      viewAll: "VER TODO",
+      coachInsightsHeading: "COACH INSIGHTS",
+      newEvalCta: "Registrar nueva evaluación",
+      errorLoading: "Error al cargar el perfil del jugador",
+      radarLabels: ["TÉCNICA", "TÁCTICA", "FÍSICO", "ACTITUD", "VISIÓN"],
+      attrLabels: ["Técnica", "Táctica", "Físico", "Actitud"],
+    },
   },
 
   // ─── Evaluations ──────────────────────────────────────────────────────────
